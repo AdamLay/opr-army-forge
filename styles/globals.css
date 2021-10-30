@@ -51,13 +51,10 @@ a {
     display: table !important;
   }
   .columns > .column {
-     display: inline-block  !important;
+     display: inline-block !important;
      vertical-align:top;
   }
-  #view-selector {
-    height: 0.25em;
-  }
-  #view-selector * {
-    display:none;
+  .no-print {
+    display:none !important;
   }
 }
