@@ -71,7 +71,7 @@ export default function View() {
           </ListItem>
         </List>
       </Drawer>
-      <div className="is-flex px-4 py-2" style={{ alignItems: "center" }}>
+      <div id="view-selector" className="is-flex px-4 py-2" style={{ alignItems: "center" }}>
         <div className="is-flex-grow-1"></div>
         <Button onClick={() => setCardView(!isCardView)}>
           {isCardView ? <DashboardIcon /> : <ViewAgendaIcon />}

@@ -42,3 +42,22 @@ a {
   opacity: 0.9;
   transform: scale(1.02);
 }
+
+@media print {
+  body {
+    zoom: 65%;
+  }
+  .columns {
+    display: table !important;
+  }
+  .columns > .column {
+     display: inline-block  !important;
+     vertical-align:top;
+  }
+  #view-selector {
+    height: 0.25em;
+  }
+  #view-selector * {
+    display:none;
+  }
+}
