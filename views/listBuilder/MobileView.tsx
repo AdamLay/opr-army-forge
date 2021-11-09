@@ -113,7 +113,7 @@ export default function MobileView() {
           maxHeight * 0.9
         ]}
         header={<UpgradePanelHeader />}>
-        <Upgrades />
+        <Upgrades mobile />
       </BottomSheet>
 
       <ValidationErrors
