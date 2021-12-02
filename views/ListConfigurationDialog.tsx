@@ -33,17 +33,20 @@ export default function ListConfigurationDialog({ isEdit, open, setOpen, customA
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const isLive = typeof (window) !== "undefined" ? window.location.host === "opr-army-forge.vercel.app" : true;
+  const isLive = typeof (window) !== "undefined"
+    ? window.location.host === "opr-army-forge.vercel.app" || window.location.host === "army-forge.onepagerules.com"
+    : true;
 
   const factionRelation = army.childData?.filter(c => c.factionRelation)[0]?.factionRelation;
 
   // Update default name once data comes in
   useEffect(() => {
     if (!isEdit && army.data && army.data.name) {
-      setArmyName(army.data.name);
-      setSelectedChild(army.data.name);
+      var armyName = (army.data.uid && customArmies) ? customArmies?.find(t => t.uid === army.data.uid).name : army.data.name
+      setArmyName(armyName);
+      setSelectedChild(armyName);
     }
-  }, [army.data, isEdit]);
+  }, [army.data, customArmies, isEdit]);
 
   const create = () => {
 
@@ -68,8 +71,8 @@ export default function ListConfigurationDialog({ isEdit, open, setOpen, customA
 
         dispatch(loadArmyData(afData));
 
-        finish({ ...childArmy, data: afData });
-      });
+        finish({ ...army, ...childArmy, data: afData });
+      }, err => {throw(err)});
 
     } else {
       finish(army);
@@ -81,27 +84,38 @@ export default function ListConfigurationDialog({ isEdit, open, setOpen, customA
     setOpen(false);
   };
 
+  const selectChild = (child) => {
+    console.log(child)
+    router.replace({ query: { ...router.query, armyId: child.uid } }, null, { shallow: true });
+    setSelectedChild(child.name);
+  }
+
   const childItem = (child) => (
     <ListItem
       divider
       className="px-0"
       style={{ cursor: child.isLive ? "pointer" : "" }}
-      onClick={() => child.isLive ? setSelectedChild(child.name) : null}>
+      onClick={() => child.isLive ? selectChild(child) : null}>
       <ListItemText
         style={{ color: !child.isLive ? "#999" : "" }}
         primary={child.name === army.data.name ? "None" : child.name} />
       <Radio
         disabled={!child.isLive}
-        value={child.name}
+        value={child}
         checked={selectedChild === child.name}
-        onChange={e => setSelectedChild(e.target.value)} />
+        onChange={() => child.isLive ? selectChild(child) : null} />
     </ListItem>
   );
+
+  const close = () => {
+    router.replace({ query: { ...router.query, armyId: null } }, null, { shallow: true });
+    setOpen(false);
+  }
 
   const rootArmy = army.childData && army.childData.find(c => c.name === army.data.name);
 
   return (
-    <Dialog fullScreen open={open} onClose={() => setOpen(false)} TransitionComponent={Transition}>
+    <Dialog fullScreen open={open} onClose={close} TransitionComponent={Transition}>
       <AppBar position="static" elevation={0} color="transparent">
         <Toolbar>
           <IconButton
@@ -110,7 +124,7 @@ export default function ListConfigurationDialog({ isEdit, open, setOpen, customA
             color="inherit"
             aria-label="menu"
             sx={{ mr: 2 }}
-            onClick={() => setOpen(false)}
+            onClick={close}
           >
             <ClearIcon />
           </IconButton>

@@ -1,6 +1,6 @@
 import { Dispatch } from "react";
 import { ArmyState, loadArmyData, setGameSystem } from "../data/armySlice";
-import { ISaveData, ISelectedUnit } from "../data/interfaces";
+import { ISaveData, ISelectedUnit, IUpgradeGainsWeapon } from "../data/interfaces";
 import { ListState, loadSavedList } from "../data/listSlice";
 import DataService from "./DataService";
 import { groupBy } from "./Helpers";
@@ -126,12 +126,12 @@ export default class PersistenceService {
     ];
 
     const getWeapons = (unit: ISelectedUnit) => {
-      const equipment = unit.equipment.filter(e => e.count > 0);
-      const upgrades = UnitService.getAllUpgradeWeapons(unit).filter(e => e.count > 0);
+      const equipment = unit.equipment
+        .concat(UnitService.getAllUpgradeWeapons(unit) as IUpgradeGainsWeapon[])
+        .filter(e => e.count > 0);
 
       return equipment
         .map(e => `${e.count > 1 ? `${e.count}x ` : ""}${e.label}`)
-        .concat(upgrades.map(e => `${e.count > 1 ? `${e.count}x ` : ""}${e.name}`))
         .join(", ");
     };
 

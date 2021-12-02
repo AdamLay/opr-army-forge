@@ -1,7 +1,6 @@
 import styles from "../styles/Home.module.css";
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../data/store';
-import { addUnit } from '../data/listSlice';
 import { Fragment, useState } from "react";
 import { Accordion, AccordionDetails, AccordionSummary, IconButton, Modal, Paper, Typography } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
@@ -9,17 +8,19 @@ import WarningIcon from "@mui/icons-material/Warning";
 import EquipmentService from "../services/EquipmentService";
 import { dataToolVersion } from "../pages/data";
 import RuleList from "./components/RuleList";
-import { IUnit } from "../data/interfaces";
+import { ISelectedUnit, IUnit } from "../data/interfaces";
+
 import { useMediaQuery } from "react-responsive";
 import FullCompactToggle from "./components/FullCompactToggle";
+import UnitService from "../services/UnitService";
 
-export function UnitSelection({ onSelected }) {
+export function UnitSelection({ onSelected, addUnit = (unit: IUnit, dummy = false) => {}, mobile = false }) {
 
   // Access the main army definition state
   const armyData = useSelector((state: RootState) => state.army);
   const list = useSelector((state: RootState) => state.list);
   const army = armyData.data;
-  const dispatch = useDispatch();
+
   const [expandedId, setExpandedId] = useState(null);
   const [expandAll, setExpandAll] = useState(true);
 
@@ -62,30 +63,37 @@ export function UnitSelection({ onSelected }) {
       unitGroups["Core"].push(unit);
   }
 
-  const handleSelection = (unit) => {
-    dispatch(addUnit(unit));
-    onSelected(unit);
+  const handleAddClick = (unit: IUnit) => {
+    addUnit(unit);
   };
+  const handleSelectClick = (unit: IUnit) => {
+    if (expandAll && !mobile) {
+      //onSelected({...UnitService.getRealUnit(unit), selectionId: null});
+      addUnit(unit, true)
+      onSelected({selectionId: "dummy"})
+    } else {
+      setExpandedId(expandedId === unit.name ? null : unit.name);
+    }
+  }
 
+  const selected = (list.selectedUnitId === "dummy" && UnitService.getSelected(list).name)
   const isBigScreen = useMediaQuery({ query: '(min-width: 1024px)' });
-  const stickyHeader: any = { position: "sticky", top: 0, backgroundColor: "#FAFAFA", zIndex: 10 };
 
   return (
     <aside
       className={styles.menu + " menu"}
       style={{ minHeight: "100%" }}
     >
-      <div style={isBigScreen ? stickyHeader : null}>
+      <div className={isBigScreen ? "sticky" : ""}>
         {isBigScreen && <div className="is-flex is-align-items-center">
           <h3 className="is-size-4 px-4 pt-4 is-flex-grow-1">
             {army.name} - {army.versionString}
           </h3>
           {army.uid == null && army.dataToolVersion !== dataToolVersion && <div className="mr-4" title="Data file may be out of date"><WarningIcon /></div>}
         </div>}
-
-        <FullCompactToggle expanded={expandAll} onToggle={() => setExpandAll(!expandAll)} />
       </div>
-
+      <FullCompactToggle expanded={expandAll} onToggle={() => setExpandAll(!expandAll)} />
+      
       {
         // For each category
         Object.keys(unitGroups).map((key, i) => (
@@ -98,23 +106,25 @@ export function UnitSelection({ onSelected }) {
                 // For each unit in category
                 unitGroups[key].map((u, index) => {
 
-                  const countInList = list.units.filter(listUnit => listUnit.name === u.name).length;
+                  const countInList = list?.units.filter(listUnit => ((listUnit.selectionId !== "dummy") && (listUnit.name === u.name))).length;
 
                   return (
                     <Accordion
                       key={u.name}
                       style={{
-                        backgroundColor: countInList > 0 ? "#F9FDFF" : null,
+                        backgroundColor: (countInList > 0) || (selected === u.name) ? "#F9FDFF" : null,
                         borderLeft: countInList > 0 ? "2px solid #0F71B4" : null,
+                        cursor: "pointer"
                       }}
                       disableGutters
                       square
                       elevation={1}
                       expanded={expandedId === u.name || expandAll}
-                      onChange={() => setExpandedId(expandedId === u.name ? null : u.name)}>
+                      onChange={() => setExpandedId(expandedId === u.name ? null : u.name)}
+                      onClick={() => {handleSelectClick(u)}}>
                       <AccordionSummary>
                         <div className="is-flex is-flex-grow-1 is-align-items-center">
-                          <div className="is-flex-grow-1" onClick={() => setExpandedId(u.name)}>
+                          <div className="is-flex-grow-1" >
                             <p className="mb-1" style={{ fontWeight: 600 }}>
                               {countInList > 0 && <span style={{ color: "#0F71B4" }}>{countInList}x </span>}
                               <span>{u.name} </span>
@@ -126,7 +136,7 @@ export function UnitSelection({ onSelected }) {
                             </div>
                           </div>
                           <p>{u.cost}pts</p>
-                          <IconButton color="primary" onClick={(e) => { e.stopPropagation(); handleSelection(u); }}>
+                          <IconButton color="primary" onClick={(e) => { e.stopPropagation(); handleAddClick(u); }}>
                             <AddIcon />
                           </IconButton>
                         </div>
@@ -154,3 +164,4 @@ export function UnitSelection({ onSelected }) {
     </aside >
   );
 }
+

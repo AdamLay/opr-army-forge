@@ -1,28 +1,35 @@
-import { Checkbox, FormControlLabel, FormGroup, Paper, FormControl, MenuItem, InputLabel, Select } from '@mui/material';
+import { Checkbox, FormControlLabel, FormGroup, Paper, FormControl, MenuItem, InputLabel, Select, Button } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../data/store';
 import styles from "../../styles/Upgrades.module.css";
 import UpgradeGroup from './UpgradeGroup';
 import UnitEquipmentTable from '../UnitEquipmentTable';
 import RuleList from '../components/RuleList';
-import { ISpecialRule, IUpgradePackage } from '../../data/interfaces';
+import { ISelectedUnit, ISpecialRule, IUpgradePackage } from '../../data/interfaces';
 import UnitService from '../../services/UnitService';
-import { toggleUnitCombined, joinUnit, addCombinedUnit, removeUnit, moveUnit } from '../../data/listSlice';
+import { toggleUnitCombined, joinUnit, addCombinedUnit, removeUnit, moveUnit, makeReal } from '../../data/listSlice';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import SpellsTable from '../SpellsTable';
 import { CustomTooltip } from '../components/CustomTooltip';
 import UpgradeService from '../../services/UpgradeService';
 import LinkIcon from '@mui/icons-material/Link';
+import { useEffect, useState } from 'react';
 
-export function Upgrades({mobile = false}) {
+export function Upgrades({ mobile = false }) {
 
   const list = useSelector((state: RootState) => state.list);
   const gameSystem = useSelector((state: RootState) => state.army.gameSystem);
   const army = useSelector((state: RootState) => state.army.data);
   const spells = army?.spells;
   const dispatch = useDispatch();
+  const [dummy, setDummy] = useState(false)
 
   const selectedUnit = UnitService.getSelected(list);
+  console.log(selectedUnit)
+
+  useEffect(() => {
+    setDummy(selectedUnit?.selectionId === "dummy")
+  }, [list.selectedUnitId])
 
   const getUpgradeSet = (id) => army.upgradePackages.filter((s) => s.uid === id)[0];
 
@@ -81,6 +88,10 @@ export function Upgrades({mobile = false}) {
     }
   };
 
+  const makeRealUnit = (e) => {
+    dispatch(makeReal())
+  }
+
   const unitsWithAttachedHeroes = list.units
     .filter(u => u.specialRules.some(rule => rule.name === "Hero"))
     .filter(u => u.joinToUnit)
@@ -91,20 +102,22 @@ export function Upgrades({mobile = false}) {
     .filter(u => unitsWithAttachedHeroes.indexOf(u.selectionId) === -1 || u.selectionId == selectedUnit?.joinToUnit);
 
   return (
-    <div className={styles["upgrade-panel"]}>
+    <div className={mobile ? styles["upgrade-panel-mobile"] : styles["upgrade-panel"]}>
 
       {selectedUnit && <Paper square elevation={0}>
         {/* Combine unit */}
-        {selectedUnit.size > 1 && !isSkirmish && <FormGroup className="px-4 pt-2 is-flex-direction-row is-align-items-center">
+        {!dummy && 
+        selectedUnit.size > 1 && !isSkirmish && (<FormGroup className="px-4 pt-2 is-flex-direction-row is-align-items-center">
           <FormControlLabel control={
             <Checkbox checked={selectedUnit.combined} onClick={() => toggleCombined()
             }  disabled={(selectedUnit.combined && !selectedUnit.joinToUnit && mobile)} />} label="Combined Unit" className="mr-2" />
           <CustomTooltip title={"When preparing your army you may merge units by deploying two copies of the same unit as a single big unit, as long as any upgrades that are applied to all models are bought for both."} arrow enterTouchDelay={0} leaveTouchDelay={5000}>
             <InfoOutlinedIcon color="primary" />
           </CustomTooltip>
-        </FormGroup>}
+        </FormGroup>)}
         {/* Join to unit */}
-        {!isSkirmish && isHero && <FormGroup className="px-4 pt-2 pb-3">
+
+        {!dummy && !isSkirmish && isHero && (<FormGroup className="px-4 pt-2 pb-3">
           <FormControl fullWidth>
             <InputLabel id="demo-simple-select-label" sx={{ zIndex: "unset" }}>Join To Unit</InputLabel>
             <Select
@@ -118,10 +131,16 @@ export function Upgrades({mobile = false}) {
               ))}
             </Select>
           </FormControl>
-        </FormGroup>}
+        </FormGroup>)}
+
+        {dummy &&
+          <FormControl fullWidth>
+            <Button variant="contained" className="mx-4 my-2 py-2" onClick={makeRealUnit} >Add to My List</Button>
+          </FormControl>
+        }
         {/* Equipment */}
         <div className="px-4 pt-2">
-          <UnitEquipmentTable unit={selectedUnit} />
+          <UnitEquipmentTable unit={selectedUnit} square={false} />
         </div>
         {isPsychic && <div className="px-4 pt-2">
           <SpellsTable />
@@ -138,7 +157,7 @@ export function Upgrades({mobile = false}) {
       {upgradeSets.map((pkg: IUpgradePackage) => (
         <div key={pkg.uid}>
           {/* <p className="px-2">{set.id}</p> */}
-          {pkg.sections.map((u, i) => (
+          {pkg.sections.filter(section => selectedUnit.disabledUpgradeSections.indexOf(section.id) === -1).map((u, i) => (
             <div className={"mt-4"} key={i}>
               <div className="px-4 is-flex is-align-items-center">
                 {(selectedUnit.combined && (u.affects === "all")) &&

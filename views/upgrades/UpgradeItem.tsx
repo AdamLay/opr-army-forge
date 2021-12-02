@@ -1,26 +1,25 @@
 import styles from "./UpgradeItem.module.css";
 import { ISelectedUnit, IUpgrade, IUpgradeGains, IUpgradeOption, IUpgradeGainsWeapon, IUpgradeGainsItem, IUpgradeGainsRule, IUpgradeGainsMultiWeapon } from '../../data/interfaces';
-import EquipmentService from '../../services/EquipmentService';
 import UpgradeService from '../../services/UpgradeService';
 import UpgradeRadio from './controls/UpgradeRadio';
 import UpgradeCheckbox from './controls/UpgradeCheckbox';
 import UpgradeUpDown from './controls/UpgradeUpDown';
-import { Fragment } from 'react';
 import { groupBy } from '../../services/Helpers';
 import pluralise from "pluralize";
-import RulesService from '../../services/RulesService';
-import UnitService from '../../services/UnitService';
 import RuleList from '../components/RuleList';
 
-function UpgradeItemDisplay({ eqp, count }) {
+function UpgradeItemDisplay({ eqp, count, isValid }) {
   const name = count > 1 ? pluralise.plural(eqp.name || eqp.label) : eqp.name || eqp.label;
+  const invalidColour = "rgba(0,0,0,.5)";
+  const colour = isValid ? "#000000" : invalidColour;
+  const subtextColour = isValid ? "#656565" : invalidColour;
 
   switch (eqp.type) {
     case "ArmyBookDefense":
     case "ArmyBookRule": {
       const rule = eqp as IUpgradeGainsRule;
       return (
-        <span style={{ color: "#000000" }}>
+        <span style={{ color: colour }}>
           <RuleList specialRules={[rule]} />
         </span>
       );
@@ -30,9 +29,9 @@ function UpgradeItemDisplay({ eqp, count }) {
       return (
         <>
           {count > 1 && <span>{count}x </span>}
-          <span className={styles.upgradeName} style={{ color: "#000000" }}>{name} </span>
-          <span className={styles.upgradeRules} style={{ color: "#656565" }}>
-            ({multiWeapon.profiles.map((profile, i) => (<>{i === 0 ? "" : ", "}<UpgradeItemDisplay eqp={profile} count={count} /></>))})
+          <span className={styles.upgradeName} style={{ color: colour }}>{name} </span>
+          <span className={styles.upgradeRules} style={{ color: subtextColour }}>
+            ({multiWeapon.profiles.map((profile, i) => (<>{i === 0 ? "" : ", "}<UpgradeItemDisplay eqp={profile} count={count} isValid={isValid} /></>))})
           </span>
         </>
       );
@@ -46,8 +45,8 @@ function UpgradeItemDisplay({ eqp, count }) {
       return (
         <>
           {count > 1 && <span>{count}x </span>}
-          <span className={styles.upgradeName} style={{ color: "#000000" }}>{name} </span>
-          <span className={styles.upgradeRules} style={{ color: "#656565" }}>
+          <span className={styles.upgradeName} style={{ color: colour }}>{name} </span>
+          <span className={styles.upgradeRules} style={{ color: subtextColour }}>
             ({[range, attacks].filter(r => r).join(", ") + (weaponRules?.length > 0 ? ", " : "")}{rules})
           </span>
         </>
@@ -58,9 +57,9 @@ function UpgradeItemDisplay({ eqp, count }) {
       return (
         <>
           {count > 1 && <span>{count}x </span>}
-          <span className={styles.upgradeName} style={{ color: "#000000" }}>{name} </span>
-          <span className={styles.upgradeRules} style={{ color: "#656565" }}>
-            ({item.content.map((c, i) => (<>{i === 0 ? "" : ", "}<UpgradeItemDisplay eqp={c} count={count} /></>))})
+          <span className={styles.upgradeName} style={{ color: colour }}>{name} </span>
+          <span className={styles.upgradeRules} style={{ color: subtextColour }}>
+            ({item.content.map((c, i) => (<>{i === 0 ? "" : ", "}<UpgradeItemDisplay eqp={c} count={count} isValid={isValid} /></>))})
           </span>
         </>
       );
@@ -80,23 +79,19 @@ export default function UpgradeItem({ selectedUnit, upgrade, option }: { selecte
 
   return (
     <div className="is-flex is-align-items-center mb-1">
-      <div className="is-flex-grow-1 pr-2">
+      <div className="is-flex-grow-1 pr-2" style={{ color: "red" }}>
         {
           gainsGroups ? Object.keys(gainsGroups).map((key, i) => {
             const group: IUpgradeGains[] = gainsGroups[key];
             const e = group[0];
-            const count = group.length
+            const count = group.reduce((c, next) => c + (next.count || 1), 0);
 
-            return <UpgradeItemDisplay key={i} eqp={e} count={count} />;
+            return <UpgradeItemDisplay key={i} eqp={e} count={count} isValid={isValid} />;
           }) : <span style={{ color: "#000000" }}>None</span>
         }
       </div>
-      <div>
-      {
-         option?.cost ? `${option.cost}pts` : "Free"
-         //option?.cost ? `${option.cost * (selectedUnit.combined && upgrade.affects === "all" ? 2 : 1)}pts` : "Free"
-         }&nbsp;</div>
-      {
+      <div style={{ color: isValid ? null : "rgba(0,0,0,.5)" }}>{option?.cost ? `${option.cost}pts` : "Free"}&nbsp;</div>
+      { selectedUnit.selectionId !== "dummy" &&
         (() => {
           switch (controlType) {
             case "check": return <UpgradeCheckbox selectedUnit={selectedUnit} upgrade={upgrade} option={option} />;

@@ -1,22 +1,14 @@
-import Head from "next/head";
 import React, { Fragment, useEffect } from "react";
 import { useSelector } from 'react-redux'
 import { RootState } from '../data/store'
 import { useRouter } from "next/router";
-import { useMediaQuery } from 'react-responsive';
-import style from "../styles/Cards.module.css";
-import UnitEquipmentTable from "../views/UnitEquipmentTable";
 import { Paper, Card } from "@mui/material";
-import RulesService from "../services/RulesService";
 import RuleList from "../views/components/RuleList";
 import DataParsingService from "../services/DataParsingService";
 import { IGameRule } from "../data/armySlice";
-import RemoveIcon from '@mui/icons-material/Clear';
-import { selectUnit, removeUnit } from "../data/listSlice";
 import UpgradeService from "../services/UpgradeService";
 import { Accordion, AccordionDetails, AccordionSummary, IconButton } from "@mui/material";
 import UnitService from "../services/UnitService";
-import { distinct } from "../services/Helpers";
 import { ISelectedUnit, IUpgradeGains, IUpgradeGainsItem, IUpgradeGainsMultiWeapon, IUpgradeGainsRule, IUpgradeGainsWeapon } from "../data/interfaces";
 import pluralise from "pluralize";
 import _ from "lodash";
@@ -37,25 +29,16 @@ export default function ViewList({ showPsychic, showFullRules, showPointCosts })
       {
         (list?.units || []).map((s: ISelectedUnit, index: number) => {
 
-          const equipmentAsUpgrades: IUpgradeGainsWeapon[] = s.equipment.map(e => ({
-            id: "",
-            label: e.label,
-            name: e.name,
-            attacks: e.attacks,
-            range: e.range || 0,
-            count: e.count || 1,
-            originalCount: e.count || 1,
-            specialRules: e.specialRules.map(DataParsingService.parseRule) as IUpgradeGainsRule[],
-            type: "ArmyBookWeapon"
-          }));
-
-          const upgrades: IUpgradeGains[] = equipmentAsUpgrades
+          const upgrades: IUpgradeGains[] = s.equipment
             .concat(s.selectedUpgrades.reduce((val, next) => val.concat(next.gains), []))
             .filter(u => u.count > 0);
 
           const displayUpgrade = (eqp: IUpgradeGains, count) => {
 
             const name = count > 1 ? pluralise.plural(eqp.name || eqp.label) : eqp.name || eqp.label;
+
+            if (!count)
+              return null;
 
             switch (eqp.type) {
               case "ArmyBookRule": {

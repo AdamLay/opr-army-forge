@@ -22,7 +22,7 @@ export default function View() {
   const [isCardView, setCardView] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showPsychic, setShowPsychic] = useState(listContainsPyschic(list));
-  const [showFullRules, setShowFullRules] = useState(true);
+  const [showFullRules, setShowFullRules] = useState(false);
   const [showPointCosts, setShowPointCosts] = useState(true);
 
   return (

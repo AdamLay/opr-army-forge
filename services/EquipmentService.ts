@@ -1,55 +1,82 @@
-import { IEquipment, IUpgradeGains, IUpgradeGainsItem, IUpgradeGainsMultiWeapon, IUpgradeGainsRule, IUpgradeGainsWeapon } from "../data/interfaces";
+import { IUpgradeGains, IUpgradeGainsItem, IUpgradeGainsMultiWeapon, IUpgradeGainsRule, IUpgradeGainsWeapon } from "../data/interfaces";
 import pluralise from "pluralize";
 import RulesService from "./RulesService";
-import { FoodBank } from "@mui/icons-material";
-import DataParsingService from "./DataParsingService";
 
 export default class EquipmentService {
 
-  public static compareEquipmentNames(a: string, b: string): boolean {
-    //return pluralise.singular(a).indexOf(pluralise.singular(b)) > -1;
-    return pluralise.singular(a || "") === pluralise.singular(b || "");
+  /**
+   * Compares an equipment with a search term.
+   * @param hasItem The equipment to test against.
+   * @param searchItem The term we are seeking a comparison for.
+   * @returns true if the equipment is a match, false otherwise.
+   */
+  public static compareEquipment(hasItem: IUpgradeGains, searchItem: string): boolean {
+    // "replace [nothing] -> always ok"
+    if (!searchItem) return true
+
+    const find = pluralise.singular(searchItem?.toLowerCase().trim() || "")
+
+    if (["equipment"].includes(find)) return !!hasItem
+
+    if (["melee weapon"].includes(find)) {
+      return (
+        (hasItem?.type === "ArmyBookWeapon") &&
+        (hasItem as IUpgradeGainsWeapon).range == 0)
+    }
+
+    if (["gun", "ranged weapon"].includes(find)) {
+      return (
+        (hasItem?.type === "ArmyBookWeapon") &&
+        (hasItem as IUpgradeGainsWeapon).range > 0)
+    }
+
+    if (["weapon"].includes(find)) {
+      return (hasItem?.type === "ArmyBookWeapon")
+    }
+
+    // otherwise match by name
+    return this.compareEquipmentNames(hasItem.name, find) || this.compareEquipmentNames(hasItem.label, find)
   }
 
-  public static find(list: IEquipment[], match: string): IEquipment[] {
+  public static compareEquipmentNames(hasItem: string, searchItem: string): boolean {
+    let find = searchItem?.toLowerCase().trim()
+    return pluralise.singular(hasItem?.toLowerCase() || "") === pluralise.singular(find || "");
+  }
+
+  public static find(list: IUpgradeGainsWeapon[], match: string): IUpgradeGainsWeapon[] {
     return list
-      .filter(e => this.compareEquipmentNames(e.label, match));
+      .filter(e => this.compareEquipment(e, match));
   }
 
-  public static findLast(list: IEquipment[], match: string): IEquipment {
+  public static findLast(list: IUpgradeGainsWeapon[], match: string): IUpgradeGainsWeapon {
     const matches = list
-      .filter(e => this.compareEquipmentNames(e.label, match));
+      .filter(e => this.compareEquipment(e, match));
     return matches[matches.length - 1];
   }
 
-  public static findLastIndex(array: IEquipment[], match: string) {
+  public static findLastIndex(array: IUpgradeGainsWeapon[], match: string) {
     let l = array.length;
     while (l--) {
-      if (this.compareEquipmentNames(array[l].label, match))
+      if (this.compareEquipment(array[l], match))
         return l;
     }
     return -1;
   }
 
-  static getAP(e: IEquipment | IUpgradeGainsWeapon): number {
+  static getAP(e: IUpgradeGainsWeapon): number {
     if (!e || !e.specialRules) return null;
-    const upgrade: IUpgradeGainsWeapon = "type" in e && e.type === "ArmyBookWeapon"
-      ? e as IUpgradeGainsWeapon
-      : null;
-    const ap = upgrade
-      ? upgrade.specialRules.filter((r: IUpgradeGainsRule) => r.name === "AP")[0]
-      : (e as IEquipment).specialRules.filter((r: string) => r.indexOf("AP") === 0)[0];
 
-    return ap ? parseInt(typeof (ap) === "string" ? DataParsingService.parseRule(ap).rating : ap.rating) : null;
+    const ap = e.specialRules.find(r => r.name === "AP");
+    return ap ? parseInt(ap.rating) : null;
   }
 
-  static formatString(eqp: IEquipment): string {
-    const name = eqp.count > 1 && eqp.label ? pluralise.plural(eqp.label) : eqp.label;
+  static formatString(eqp: IUpgradeGainsWeapon): string {
+    const name = eqp.count > 1 ? pluralise.plural(eqp.name) : eqp.name;
     const range = eqp.range ? `${eqp.range}"` : null;
     const attacks = eqp.attacks ? `A${eqp.attacks}` : null;
 
     return `${name} (${[range, attacks || null] // Range, then attacks
-      .concat(eqp.specialRules || []) // then special rules
+      .concat(eqp.specialRules.map(RulesService.displayName)) // then special rules
       .filter((m) => !!m) // Remove empty/null entries
       .join(", ")})`; // comma separated list
   }

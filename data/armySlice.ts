@@ -28,7 +28,9 @@ export interface IArmyData {
   specialRules: IGameRule[];
   spells: { id: string; name: string; effect: string; threshold: number; }[];
   isLive: boolean;
+  official: boolean;
   coverImagePath: string;
+  username?: string;
 }
 
 const initialState: ArmyState = {

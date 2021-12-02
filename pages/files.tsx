@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../data/store'
-import { loadArmyData, loadChildArmyData, setArmyFile } from '../data/armySlice'
+import { IArmyData, loadArmyData, loadChildArmyData, setArmyFile } from '../data/armySlice'
 import { useRouter } from 'next/router';
-import { Card, AppBar, IconButton, Paper, Toolbar, Typography, CircularProgress, Snackbar } from '@mui/material';
+import { Card, AppBar, IconButton, Paper, Toolbar, Typography, CircularProgress, Snackbar, InputAdornment, Input } from '@mui/material';
 import MuiAlert from '@mui/material/Alert'
 import BackIcon from '@mui/icons-material/ArrowBackIosNew';
 import RightIcon from "@mui/icons-material/KeyboardArrowRight";
 import WarningIcon from "@mui/icons-material/Warning";
+import ClearIcon from '@mui/icons-material/Clear';
+import SearchIcon from '@mui/icons-material/Search';
 import { dataToolVersion } from "./data";
 import { resetList } from "../data/listSlice";
 import ListConfigurationDialog from "../views/ListConfigurationDialog";
@@ -15,28 +17,44 @@ import ArmyImage from "../views/components/ArmyImage";
 import DataService from "../services/DataService";
 import _ from "lodash";
 
+interface IFaction {
+  official: boolean,
+  name: string,
+  isLive: boolean,
+  factionName: string,
+  factionRelation: string
+}
+
 export default function Files() {
 
   const army = useSelector((state: RootState) => state.army);
   const [armyFiles, setArmyFiles] = useState(null);
-  const [customArmies, setCustomArmies] = useState(null);
+  const [customArmies, setCustomArmies]: [(IArmyData | IFaction)[], any] = useState(null);
   const [driveArmies, setDriveArmies] = useState(null);
   const [newArmyDialogOpen, setNewArmyDialogOpen] = useState(false);
   const [showSnackbar, setShowSnackbar] = useState(false);
+  const [searchText, setSearchText] = useState("");
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const isLive = typeof(window) !== "undefined" ? window.location.host === "opr-army-forge.vercel.app" : true;
+  const filtered = (armies) => armies && armies.filter(a => { 
+    return a.name.toLowerCase().includes(searchText.toLowerCase()) || a.username?.toLowerCase().includes(searchText.toLowerCase())
+  })
+  const filteredArmies = customArmies ? filtered(customArmies) : []
+
+  const isLive = typeof (window) !== "undefined"
+    ? window.location.host === "opr-army-forge.vercel.app" || window.location.host === "army-forge.onepagerules.com"
+    : true;
 
   const useStaging: boolean = false;
   //const webCompanionUrl = `https://opr-list-builder${useStaging ? "-staging" : ""}.herokuapp.com/api`;
-  const webCompanionUrl = 'https://opr-list-bui-feature-po-r8wmtp.herokuapp.com/api';
+  const webCompanionUrl = 'https://webapp.onepagerules.com/api';
 
   useEffect(() => {
 
     // Redirect to game selection screen if no army selected
     if (!army.gameSystem) {
-      router.push({pathname: "gameSystem/", query: router.query}, null, { shallow: true });
+      router.push({ pathname: "gameSystem/", query: router.query }, null, { shallow: true });
       return;
     }
 
@@ -94,28 +112,32 @@ export default function Files() {
         setCustomArmies(valid);
         return valid
       })
-      .then((armies) => {
-        if (router.query) {
-        let armyId = router.query.armyId as string
-        let army = armies.find(t => t.uid == armyId)
-        if (army) {
-           selectCustomList(army)
-        }
-      }}, (err) => {throw(err)});
-  }, []);
+  }, [army.gameSystem]);
+
+  useEffect(() => {
+    if (customArmies && router.query) {
+      let armyId = router.query.armyId as string
+      let army = customArmies.find((t : IArmyData) => t.uid == armyId)
+      if (army) {
+        selectCustomList(army)
+      }
+    }
+    
+  }, [customArmies])
 
   const armies = armyFiles?.filter(grp => grp.key === army.gameSystem)[0]?.items;
 
   const officialFactions = !customArmies
     ? []
-    : _.groupBy(customArmies.filter(ca => ca.official && ca.factionName), a => a.factionName);
+    : _.groupBy(filteredArmies.filter(ca => ca.official && ca.factionName), a => a.factionName);
 
-  const officialArmies = customArmies
+  const officialArmies = filteredArmies
     ?.filter(ca => ca.official && !ca.factionName)
     .concat(Object.keys(officialFactions).map(key => ({
       name: key,
       factionName: key,
       factionRelation: officialFactions[key][0].factionRelation,
+      official: true,
       // Live if any are live
       isLive: officialFactions[key].reduce((live, next) => live || next.isLive, false)
     })));
@@ -138,27 +160,26 @@ export default function Files() {
     });
   };
 
-  const selectCustomList = (customArmy: any) => {
-
+  const chooseArmy = (army) => {
+    router.replace({ query: { ...router.query, armyId: army.uid } }, null, { shallow: true })
+    selectCustomList(army)
+  }
+  const selectCustomList = (customArmy) => {
     if (customArmy.factionName) {
+      if (customArmies) {
+        const factionArmy = { ...customArmy, name: customArmy.factionName }
+        const related = customArmies.filter(a => (a.factionName === customArmy.factionName) && ((a.official === true) || !customArmy.official));
 
-      dispatch(loadArmyData(customArmy));
-
-      const related = customArmies.filter(a => a.factionName === customArmy.factionName && a.official === true);
-      console.log(related);
-      dispatch(loadChildArmyData(related));
-
-      setNewArmyDialogOpen(true);
-
+        console.log(factionArmy);
+        dispatch(loadArmyData(factionArmy));
+        dispatch(loadChildArmyData(related as IArmyData[]));
+        setNewArmyDialogOpen(!!related);
+      }
     } else {
-
       dispatch(loadChildArmyData(null));
 
       DataService.getApiData(customArmy.uid, afData => {
-
-        router.push({query: {...router.query, armyId: customArmy.uid}}, null, {shallow: true})
         dispatch(loadArmyData(afData));
-
         setNewArmyDialogOpen(!!afData);
       }, (err) => {
         console.error(`Failed to get Army data: ${err}`)
@@ -173,7 +194,22 @@ export default function Files() {
     army={army}
     enabled={enabled}
     driveArmy={null}
-    onSelect={army => selectCustomList(army)} />);
+    onSelect={army => chooseArmy(army)} />);
+
+  const SearchBox = <Input 
+    className="mt-1"
+    sx={{flexBasis: "5em", flexGrow: 0.25, alignSelf: "center", color: "white", textAlign: "right"}} 
+    id="searchfield" size="small" margin="none" autoComplete="off" disableUnderline
+    onChange={(e) => {setSearchText(e.target.value)}} 
+    value={searchText} 
+    inputProps={{style: {textAlign:"right"}}}
+    endAdornment={
+      <InputAdornment position="end" sx={{width: "2rem", color: "white"}}>
+        {searchText ? 
+          <IconButton size="small" onClick={() => {setSearchText((document.getElementById("searchfield") as HTMLInputElement).value = "")}}><ClearIcon sx={{color: "white"}} /></IconButton>
+        : <SearchIcon onClick={() => {document.getElementById("searchfield").focus()}} />}
+      </InputAdornment>
+    }/>
 
   return (
     <>
@@ -186,19 +222,22 @@ export default function Files() {
               color="inherit"
               aria-label="menu"
               sx={{ mr: 2 }}
-              onClick={() => router.back()}
+              onClick={() => router.push("/gameSystem")}
             >
               <BackIcon />
             </IconButton>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               Create new list
             </Typography>
+            {SearchBox}
           </Toolbar>
         </AppBar>
       </Paper>
       <div className="container">
         <div className="mx-auto p-4">
-          <h3 className="is-size-4 has-text-centered mb-4 pt-4">Choose your army</h3>
+          <div className="mb-4 has-text-centered is-clearfix">
+            <h3 className="is-size-4 pt-4">Choose your army</h3>
+          </div>
           {
             army.gameSystem === "gf" && (
               <>
@@ -222,7 +261,7 @@ export default function Files() {
           }
           <div className="columns is-mobile is-multiline">
             {
-              army.gameSystem === "gf" || !armyFiles ? null : armies.map((file, index) => {
+              army.gameSystem === "gf" || !armyFiles ? null : filtered(armies)?.map((file, index) => {
                 const driveArmy = driveArmies && driveArmies.filter(army => file.name.toUpperCase() === army?.name?.toUpperCase())[0];
 
                 return (
@@ -240,7 +279,7 @@ export default function Files() {
             <>
               <h3>Custom Armies</h3>
               <div className="columns is-multiline">
-                {customArmies.filter(a => a.official === false).map((customArmy, i) => (
+                {filteredArmies.filter(a => a.official === false).map((customArmy : IArmyData, i) => (
                   <div key={i} className="column is-half">
                     <Card
                       elevation={1}
@@ -249,8 +288,9 @@ export default function Files() {
                         backgroundColor: customArmy.official ? "#F9FDFF" : null,
                         borderLeft: customArmy.official ? "2px solid #0F71B4" : null,
                       }}
-                      onClick={(e) => { e.stopPropagation(); selectCustomList(customArmy); }}>
+                      onClick={(e) => { e.stopPropagation(); chooseArmy(customArmy); }}>
                       <div className="is-flex is-flex-grow-1 is-align-items-center p-4">
+                        <ArmyImage className="mr-2" size="32px" name={customArmy.name} armyData={customArmy} />
                         <div className="is-flex-grow-1">
                           <p className="mb-1" style={{ fontWeight: 600 }}>{customArmy.name}</p>
                           <div className="is-flex" style={{ fontSize: "14px", color: "#666" }}>
@@ -287,8 +327,8 @@ export default function Files() {
         open={showSnackbar}
         onClose={() => setShowSnackbar(false)}
       >
-        <MuiAlert severity="error" variant="filled" sx={{background: "#ff7043"}}>Could not load Army Data.</MuiAlert>
-        </Snackbar>
+        <MuiAlert severity="error" variant="filled" sx={{ background: "#ff7043" }}>Could not load Army Data.</MuiAlert>
+      </Snackbar>
     </>
   );
 }

@@ -1,6 +1,5 @@
-import { IEquipment, ISpecialRule, IUpgrade, IUpgradeGainsRule, IUpgradeOption } from '../data/interfaces';
+import { ISpecialRule, IUpgrade, IUpgradeGainsRule } from '../data/interfaces';
 import { nanoid } from "nanoid";
-import { loadOptions } from '@babel/core';
 
 export default class DataParsingService {
 
@@ -26,13 +25,15 @@ export default class DataParsingService {
     const mountMatch = /mount on/i.test(text);
     if (mountMatch)
       return {
+        id: nanoid(7),
         type: "upgrade",
         select: 1
       };
 
-    const takeMatch = /^Take\s([\d]+|one|two)?\s?(.+?)\sattachments?:/.exec(text);
+    const takeMatch = /^Take\s([\d]+|one|two|any)?\s?(.+?)\sattachments?:/.exec(text);
     if (takeMatch)
       return {
+        id: nanoid(7),
         type: "upgrade",
         attachment: true,
         select: takeMatch[1] ? (parseInt(takeMatch[1]) || this.numberFromName(takeMatch[1]) || takeMatch[1] as any) : 1,
@@ -42,6 +43,7 @@ export default class DataParsingService {
     const anyModelMatch = /^(any|one) model may (replace|take) (\d+|one|two|three) (.+?)(?: attachment)?:/gi.exec(text);
     if (anyModelMatch) {
       return {
+        id: nanoid(7),
         type: anyModelMatch[2] === "replace" ? "replace" : "upgrade",
         attachment: anyModelMatch[2] === "take",
         affects: anyModelMatch[1].toLowerCase() === "any" ? "any" : this.numberFromName(anyModelMatch[1].toLowerCase()),
@@ -55,14 +57,16 @@ export default class DataParsingService {
     const upgradeUpToModelsMatch = /Upgrade up to two models with/i.exec(text);
     if (upgradeUpToModelsMatch)
       return {
+        id: nanoid(7),
         type: "upgrade",
         model: true,
         select: 2
       };
 
-      const addModelMatch = /Add one model with/i.exec(text);
+    const addModelMatch = /Add one model ?(?:with)?/i.exec(text);
     if (addModelMatch)
       return {
+        id: nanoid(7),
         type: "upgrade",
         attachModel: true,
         select: 1
@@ -73,13 +77,14 @@ export default class DataParsingService {
     const match = /(Upgrade|Replace)\s?(any|one|all|\d+x)?\s?(?:models?)?(?:(.+)\swith)?\s?(?:with)?\s?(one|any)?(?:up to (.+?)(?:\s|$))?(.+)?/.exec(text);
 
     if (!match) {
-      throw(new Error("Cannot match: " + text))
+      throw (new Error("Cannot match: " + text))
       return null;
     }
 
     const replaceWhat = match[groups.replaceWhat];
 
     const result: IUpgrade = {
+      id: nanoid(7),
       type: match[groups.type]?.toLowerCase() as any,
       model: text.indexOf("model") > -1
     };
@@ -102,15 +107,23 @@ export default class DataParsingService {
         result.replaceWhat = replaceWhat
           .split("/")
           .map(part => part.trim())
-          .map(part => part.split(" and "));
+          .map(part => part.split(" and "))
+          .map(part => part.map(p => p.split(", ")).reduce((arr, next) => arr.concat(next), []));
       } else {
-        result.replaceWhat = replaceWhat.split(" and ");
+        result.replaceWhat = replaceWhat
+          .split(" and ")
+          .map(part => part.split(", "))
+          .reduce((arr, next) => arr.concat(next), []);
       }
     }
 
     // TODO: Better way of doing this?
     if (result.type === "upgrade" && result.replaceWhat && !result.affects && !result.select && !result.model)
       result.type = "upgradeRule";
+
+    if (result.model === false) {
+      delete result.model;
+    }
 
     return result;
   }
@@ -329,7 +342,7 @@ export default class DataParsingService {
         cost: combinedMatch[2] === "Free" ? 0 : parseInt(combinedMatch[3]),
         label: part.replace(costRegex, "").trim(),
         gains: multiParts
-          .map(mp => this.parseEquipment(mp, isUpgrade) as IEquipment)
+          .map(mp => this.parseEquipment(mp, isUpgrade))
       };
     }
 

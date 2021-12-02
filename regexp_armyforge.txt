@@ -1,0 +1,372 @@
+README: The problem are the reserved words (any, all, etc) and the order. 
+Regular expressions are simply terrible to managing this. 
+So you have to apply in strict order the regexps as i put them
+and ONLY work with FIRST match, I hope you don't mind.
+You would have to tinker some of them (they have the Replace, Upgrade etc keywords while working).
+
+Add one model with
+
+/^(any|one) model may (replace|take) (\d+|one|two|three) ([\-a-z ]+) (attachment)/
+Any model may take one Carbine attachment
+Any model may take one Heavy Rifle attachment
+
+/^(any|one) model may (replace|take) (\d+|one|two|three) ([\-a-z ]+)/
+Any model may replace one Metal Fangs
+Any model may replace one Razor Claws
+
+Mount on
+
+One model may take one Auto-Rifle attachment
+One model may take one Heavy Rifle attachment
+
+/^Replace ([\-a-z ]+), ([\-a-z ]+) and (2x [\-a-z ]+)/
+Replace Spear-Rifle, Spear and 2x Destroyers
+
+/^Replace (all|any|one|up to two) ([\-a-z ]+) and ([\-a-z ]+)/
+Replace all Burst Pistols and CCWs
+Replace all F-Blaster and Taser Swords
+Replace all Heavy Machineguns and Claws
+Replace all Heavy Pistols and CCWs
+Replace all Heavy Rifles and CCWs
+Replace all Pistols and CCWs
+Replace all Rod-Shots and Rods
+Replace all Wraith Cannons and CCWs
+Replace any Carbine and CCW
+Replace any Destroyer Pistol and Ritual Dagger
+Replace any Heavy Pistol and CCW
+Replace any Heavy Rifle and CCW
+Replace any Rifle and CCW
+Replace any Spear-Fuse and Spear
+Replace any Spear-Rifle and Spear
+Replace any Walker Fist and Twin Plasma
+Replace one Barb Rifle and CCW
+Replace one Carbine and CCW
+Replace one F-Carbine and CCW
+Replace one Heavy Carbine and CCW
+Replace one Heavy Pistol and CCW
+Replace one Heavy Rifle and CCW
+Replace one Pistol and Mutant Claws
+Replace one Pulse Shotgun and CCW
+Replace one R-Carbine and CCW
+Replace one Rifle and CCW
+Replace one Shard Carbine and CCW
+Replace one Shard Pistol and Chain-Sword
+Replace one Shard Pistol and Energy Sword
+Replace one Storm Rifle and CCW
+Replace one Twin Heavy Pistols and CCW
+Replace one Twin P-Pistols and CCW
+Replace up to two Pistols and Mutant Claws
+
+/^Replace ([\-a-z ]+) and ([\-a-z ]+)/
+Replace Pistol and CCW
+Replace Dual Maul Cutters and Fiend Claws
+Replace Gauss Pistol and CCW
+Replace Heavy Pistol and CCW
+Replace Heavy Rifle and CCW
+Replace Pulse Shotgun and CCW
+Replace Shock Rifle and Rocket Launcher
+Replace Sword-Flame and Sword
+
+
+/^Replace (2x [\-a-z ]+)/
+Replace 2x Twin Shard Cannons
+Replace 2x Walker Fists
+
+/^Replace (all|any|one|up to two|up to three) ([\-a-z ]+)/
+Replace all Burst Pistols
+Replace all CCWs
+Replace all Carbines
+Replace all Claws
+Replace all Cyborg Claws
+Replace all Dual Energy Claws
+Replace all Dual Hyper Swords
+Replace all Dual S-Blades
+Replace all F-Carbines
+Replace all Flamethrowers
+Replace all Flux Carbines
+Replace all Fusion Rifles
+Replace all G-Carbines
+Replace all Heavy Chainsaw Swords
+Replace all Heavy Rifles
+Replace all Laser Spears
+Replace all Mini GLs
+Replace all Pistols
+Replace all Plasma Pistols
+Replace all Pulse Shotguns
+Replace all R-Carbines
+Replace all Shard Pistols
+Replace all Shock Staves
+Replace all Stingers
+Replace all Suit Fists
+Replace all Twin Assault Blasters
+Replace all Twin Fist-Pistols
+Replace all Twin Heavy Rifles
+Replace all Twin Mini-MGs
+Replace any Assault Pistol
+Replace any Bio-Gun
+Replace any Brute Fist
+Replace any Burst Pistol
+Replace any CCW
+Replace any Carbine
+Replace any Claws
+Replace any Contortion Cannon
+Replace any Destroyer
+Replace any Destroyer Cannon
+Replace any Dual Scissor Claws
+Replace any Energy Claw
+Replace any Energy Sword
+Replace any Exalted Flame Axe
+Replace any Exalted Plague Sword
+Replace any Exalted Power Staff
+Replace any Exalted Ritual Blade
+Replace any Fusion Missiles
+Replace any Fusion Rifle
+Replace any Gauss Rifle
+Replace any Grave Auto-Rifle
+Replace any Gravity Cannon
+Replace any Grenade Launcher
+Replace any Heat Hammer
+Replace any Heavy Flamethrower
+Replace any Heavy Hammer
+Replace any Heavy Machinegun
+Replace any Heavy Pick
+Replace any Heavy Pistol
+Replace any Heavy Plasma Sword
+Replace any Heavy Psychic Cannon
+Replace any Heavy Rifle
+Replace any Heavy Sword
+Replace any Mace
+Replace any Mortar
+Replace any Mutant Claws
+Replace any Pistol
+Replace any Plasma Rifle
+Replace any Psychic Cannon
+Replace any Razor Claws
+Replace any Rifle
+Replace any Rocket Launcher
+Replace any Shard Cannon
+Replace any Shard Pistol
+Replace any Shardgun
+Replace any Shot Missiles
+Replace any Sniper Rifle
+Replace any Storm Rifle
+Replace any Twin Combat Drill
+Replace any Twin GL-Pod
+Replace any Twin Gauss Rifle
+Replace any Twin Shard Cannon
+Replace any Walker Claw
+Replace any Walker Fist
+Replace any Wraith Fist
+Replace any Wrist-GL
+Replace one Barb Pistol
+Replace one Barb Rifle
+Replace one Bio-Carbine
+Replace one Bio-Gun
+Replace one Brute Fist
+Replace one Burst Carbine
+Replace one CCW
+Replace one Carbine
+Replace one Chain-Sword
+Replace one Dual Hand Weapon
+Replace one Dual Hand Weapons
+Replace one Dual Reaper Blades
+Replace one Energy Sword
+Replace one Fusion Rifle
+Replace one Gauss Cannon
+Replace one Gauss Rifle
+Replace one Glaive
+Replace one Grave Auto-Rifle
+Replace one Heavy Chainsaw Sword
+Replace one Heavy Flamethrower
+Replace one Heavy Mace
+Replace one Heavy Machinegun
+Replace one Heavy Pistol
+Replace one Heavy Rifle
+Replace one Incinerator
+Replace one Knight Fist
+Replace one Laser Blaster
+Replace one Laser Spear
+Replace one Mace
+Replace one Mutant Claws
+Replace one Noise Rifle
+Replace one Pistol
+Replace one Plasma Rifle
+Replace one Pulse Shotgun
+Replace one R-Carbine
+Replace one Revolver
+Replace one Rifle
+Replace one Shard Carbine
+Replace one Shard Pistol
+Replace one Shot Missiles
+Replace one Storm Rifle
+Replace one Titan Sword
+Replace one Twin Barb Rifle
+Replace one Twin Heavy Pistols
+Replace one Twin P-Pistols
+Replace one Twin Plasma Carbine
+Replace one Twin Rifle
+Replace one Twin Shardguns
+Replace one Twin Super MG
+Replace one Walker Fist
+Replace one Web Spinner
+Replace up to three Carbines
+Replace up to three Pulse Carbines
+Replace up to three Rifles
+Replace up to two Barb Carbines
+Replace up to two CCWs
+Replace up to two Carbines
+Replace up to two Heavy Carbines
+Replace up to two Heavy Pistols
+Replace up to two Heavy Rifles
+Replace up to two Pistols
+Replace up to two Razor Claws
+Replace up to two Rifles
+Replace up to two Rocket Launchers
+Replace up to two Shard Pistols
+Replace up to two Shotguns
+Replace up to two Walker Claws
+
+/^Replace ([\-a-z ]+)/
+Replace Bane Flamethrower
+Replace Battle Cannon
+Replace Burst Carbine
+Replace CCW
+Replace Caustic Cannon
+Replace Crab Flail
+Replace Custom Cannon
+Replace Death Launcher
+Replace Demolition Cannon
+Replace Destruction Pulse
+Replace Distortion Cannon
+Replace Doom Cannon
+Replace Dual Berserker Axes
+Replace Dual Energy Fists
+Replace Dual Heavy Twin-Guns
+Replace Dual Maul Cutters
+Replace Dual Titan Fists
+Replace Energy Cannon
+Replace Energy Glaive
+Replace Energy Sword
+Replace Flame Axe
+Replace Flame Bombs
+Replace Flame Cannon
+Replace Flame Claw
+Replace Flamethrower Cannon
+Replace Forge Flamethrower
+Replace Fury Missiles
+Replace Fusion Destroyer
+Replace Gatling Cannon
+Replace Gatling Gun
+Replace Gauss Cannon
+Replace Gauss Pistol
+Replace Ghoulish Claws
+Replace Great Flame Axe
+Replace Great Plague Sword
+Replace Great Power Staff
+Replace Great Ritual Blade
+Replace Heavy Claws
+Replace Heavy Flamethrower
+Replace Heavy Fusion Rifle
+Replace Heavy Gauss Cannon
+Replace Heavy Ion Carbine
+Replace Heavy Machinegun
+Replace Heavy Mining Laser
+Replace Heavy Pistol
+Replace Heavy Plasma Cannon
+Replace Heavy Thunder Cannon
+Replace Incendiary Cannon
+Replace Laser Machinegun
+Replace Laser Talon
+Replace Light Battle Cannon
+Replace Lust Cannon
+Replace Lust Claw
+Replace Meat Grinder
+Replace Mini-Claw
+Replace Monstrous Claws
+Replace Nova Cannon
+Replace Organ Mortar Array
+Replace Pistol
+Replace Plague Cannon
+Replace Plague Claw
+Replace Plague Sword
+Replace Power Cannon
+Replace Power Claw
+Replace Power Staff
+Replace Pulse Blaster
+Replace Pulse Shotgun
+Replace Quad Frag Pods
+Replace Reaper Cannon
+Replace Ritual Blade
+Replace Shard Cannon
+Replace Shard Pistol
+Replace Shredder Bio-Artillery
+Replace Storm Missiles
+Replace Sub-Railgun
+Replace Suit Fists
+Replace Taser Lance
+Replace Titan Gatling Cannon
+Replace Toxic Spray
+Replace Toxin Missiles
+Replace Twin Barb Rifle
+Replace Twin Bazooka
+Replace Twin Burst Carbine
+Replace Twin Destroyer Cannon
+Replace Twin EMP Rifle
+Replace Twin Flamethrower
+Replace Twin Flamethrower Cannons
+Replace Twin Flux Cannon
+Replace Twin Frag-GLs
+Replace Twin Fusion Ray
+Replace Twin Fusion Rifle
+Replace Twin Heavy Blazer
+Replace Twin Heavy Flamethrower
+Replace Twin Heavy Flamethrowers
+Replace Twin Heavy Fusion Rifles
+Replace Twin Heavy Machinegun
+Replace Twin Heavy Machineguns
+Replace Twin Heavy Volley Gun
+Replace Twin Laser Cannon
+Replace Twin Laser Lance
+Replace Twin Laser Talon
+Replace Twin Minigun
+Replace Twin P-Cannon
+Replace Twin Particle Beam
+Replace Twin Plasma Rifle
+Replace Twin Rocket Launcher
+Replace Twin Rocket Pods
+Replace Twin Shard Mortars
+Replace Twin Shardgun
+Replace Twin Strike Missiles
+Replace Twin Super MG
+Replace Twin Typhoon Missiles
+Replace Virus Injector
+
+/^Take one (Carbine|Heavy Machinegun|Heavy Rifle) attachment/
+Take one Carbine attachment
+Take one Heavy Machinegun attachment
+Take one Heavy Rifle attachment
+
+/Upgrade (all|any|one|up to two) ([\-a-z]+?|Brute Fist|Pulse Rifles|Walker Claw|Walker Fist) (with one|with any|with up to two|with)/
+Upgrade all Twin-Guns with one
+Upgrade all Pulse Rifles with
+Upgrade all models with
+Upgrade all models with any
+Upgrade all models with one
+Upgrade any Brute Fist with one
+Upgrade any Walker Claw with one
+Upgrade any Walker Fist with one
+Upgrade any model with
+Upgrade any model with any
+Upgrade any model with one
+Upgrade any model with up to two
+Upgrade one model with
+Upgrade one model with any
+Upgrade one model with one
+Upgrade up to two models with
+
+/^Upgrade with (any|one|up to two)/
+Upgrade with
+Upgrade with any
+Upgrade with one
+Upgrade with up to two
+

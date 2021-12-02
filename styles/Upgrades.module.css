@@ -1,4 +1,8 @@
 .upgrade-panel {
   background-color: #fafafa;
+  /*min-height: 100%;*/
+}
+.upgrade-panel-mobile {
+  background-color: #fafafa;
   min-height: 100%;
 }

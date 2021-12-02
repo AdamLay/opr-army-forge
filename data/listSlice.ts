@@ -5,6 +5,7 @@ import { debounce } from 'throttle-debounce';
 import { current } from 'immer';
 import PersistenceService from '../services/PersistenceService';
 import { nanoid } from "nanoid";
+import UnitService from '../services/UnitService';
 
 export interface ListState {
   creationTime: string;
@@ -66,18 +67,15 @@ export const listSlice = createSlice({
       return { ...action.payload };
     },
     addUnit: (state, action: PayloadAction<any>) => {
-      state.units.push({
-        ...action.payload,
-        selectionId: nanoid(5),
-        selectedUpgrades: [],
-        combined: false,
-        joinToUnit: false,
-        joined: false,
-        equipment: action.payload.equipment.map(eqp => ({
-          ...eqp,
-          count: eqp.count || action.payload.size // Add count to unit size if not already present
-        }))
-      });
+      state.units.push(action.payload);
+
+      state.points = UpgradeService.calculateListTotal(state.units);
+
+      debounceSave(current(state));
+    },
+    makeReal: (state) => {
+      const unit = state.units.find(u => u.selectionId === "dummy")
+      state.selectedUnitId = unit.selectionId = nanoid(5)
 
       state.points = UpgradeService.calculateListTotal(state.units);
 
@@ -102,6 +100,38 @@ export const listSlice = createSlice({
 
       debounceSave(current(state));
     },
+    addUnits: (state, action: PayloadAction<any>) => {
+      let units = action.payload.units.map(u => {
+        return {
+          ...u,
+          selectionId: nanoid(5)
+        }
+      })
+
+      action.payload.units.forEach((u, i) => {
+        if (u.joinToUnit) {
+          //console.log(action.payload.units)
+          //console.log(`${u.name} is joined to unit ${u.joinToUnit}...`)
+          let joinedIndex = action.payload.units.findIndex((t) => {return t.selectionId === u.joinToUnit})
+          //console.log(`unit ${u.joinToUnit} found at index ${joinedIndex}...`)
+          if (joinedIndex >= 0) {
+            units[i].joinToUnit = units[joinedIndex].selectionId
+          } else {
+            units[i].joinToUnit = null
+            units[i].combined = false
+          }
+        }
+        if (u.combined) {
+          units[i].combined = action.payload.units.some((t) => {return (t.selectionId === u.joinToUnit) || (t.joinToUnit === u.selectionId)})
+        }
+      })
+
+      state.units.splice(action.payload.index ?? -1,0,...units)
+
+      state.points = UpgradeService.calculateListTotal(state.units);
+
+      debounceSave(current(state));
+    },
     selectUnit: (state, action: PayloadAction<string>) => {
       state.selectedUnitId = action.payload;
     },
@@ -109,6 +139,8 @@ export const listSlice = createSlice({
       const removeIndex = state
         .units
         .findIndex(u => u.selectionId === action.payload);
+
+      if (removeIndex == -1) return null
 
       let unit = state.units[removeIndex]
       console.log(`removing: ${unit.name} - ${unit.selectionId}`)
@@ -131,8 +163,8 @@ export const listSlice = createSlice({
         } else {
           console.log(`unit has no child, so must have parent... finding it.`)
           let parent = state.units.find(t => { return t.combined && (t.joinToUnit === action.payload) })
-          console.log(`parent: ${parent.name} - ${parent.selectionId}`)
           if (parent) {
+            console.log(`parent: ${parent.name} - ${parent.selectionId}`)
             parent.combined = false
             parent.joinToUnit = null
           }
@@ -140,7 +172,11 @@ export const listSlice = createSlice({
           state.units.splice(removeIndex, 1);
         }
       } else {
-        state.undoUnitRemove = state.units.splice(removeIndex, 1);
+        if (unit.selectionId === "dummy") {
+          state.units.splice(removeIndex, 1);
+        } else {
+          state.undoUnitRemove = state.units.splice(removeIndex, 1);
+        }
       }
 
       state.points = UpgradeService.calculateListTotal(state.units);
@@ -254,7 +290,9 @@ export const {
   addUnit,
   applyUpgrade,
   removeUpgrade,
+  makeReal,
   addCombinedUnit,
+  addUnits,
   selectUnit,
   removeUnit,
   renameUnit,

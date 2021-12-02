@@ -8,6 +8,7 @@ import _ from "lodash";
 import { Delete, MobiledataOffOutlined } from '@mui/icons-material';
 import PersistenceService from '../services/PersistenceService';
 import { ISaveData } from '../data/interfaces';
+import ArmyImage from '../views/components/ArmyImage';
 
 export default function Load() {
 
@@ -130,7 +131,7 @@ export default function Load() {
                     const points = save.listPoints;
                     const title = (
                       <>
-                        <span style={{ fontWeight: 600 }}>{save.gameSystem.toUpperCase()} - {save.list.name}</span>
+                        <span style={{ fontWeight: 600 }}>{save.gameSystem?.toUpperCase()} - {save.list.name}</span>
                         <span style={{ color: "#656565" }}> • {points}pts</span>
                       </>
                     );
@@ -145,7 +146,7 @@ export default function Load() {
                       <ListItem key={save.list.creationTime} disablePadding secondaryAction={deleteButton}>
                         <ListItemButton onClick={() => loadSave(save)}>
                           <ListItemAvatar>
-                            <Avatar sx={{ bgcolor: "#CcE7Fa" }} style={{ overflow: "visible" }}>
+                            {/* <Avatar sx={{ bgcolor: "#CcE7Fa" }} style={{ overflow: "visible" }}>
                               <div className="is-flex" style={{
                                 height: "100%",
                                 width: "100%",
@@ -155,10 +156,11 @@ export default function Load() {
                                 backgroundRepeat: 'no-repeat',
                                 position: "relative", zIndex: 1
                               }}></div>
-                            </Avatar>
+                            </Avatar> */}
+                            <ArmyImage  image={save.coverImagePath} name={save.armyName} armyData={save.armyData} size={"32px"} />
                           </ListItemAvatar>
                           {/* <ArmyImage name={save.armyName} /> */}
-                          <ListItemText primary={title} secondary={"Modified " + modified.toLocaleDateString() + " " + time} />
+                          <ListItemText className="ml-2" primary={title} secondary={"Modified " + modified.toLocaleDateString() + " " + time} />
                         </ListItemButton>
                       </ListItem>
                     );

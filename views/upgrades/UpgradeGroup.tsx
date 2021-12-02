@@ -15,10 +15,6 @@ export default function UpgradeGroup({ upgrade }: { upgrade: IUpgrade }) {
 
   const controlType = UpgradeService.getControlType(selectedUnit, upgrade);
 
-  // const defaultOpt = controlType === "radio" && upgrade.type === "replace" && typeof (upgrade.replaceWhat) === "string"
-  //     ? EquipmentService.findLast(selectedUnit.equipment, upgrade.replaceWhat as string)
-  //     : null;
-
   return (
     <Paper className="px-4 py-2" square elevation={0}>
       {

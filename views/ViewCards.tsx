@@ -11,7 +11,8 @@ import { groupBy } from "../services/Helpers";
 import UnitService from "../services/UnitService";
 import UpgradeService from "../services/UpgradeService";
 import _ from "lodash";
-import { ISelectedUnit } from "../data/interfaces";
+import { ISelectedUnit, IUpgradeGainsMultiWeapon, IUpgradeGainsWeapon } from "../data/interfaces";
+import RuleList from "./components/RuleList";
 
 export default function ViewCards({ showPsychic, showFullRules, showPointCosts }) {
 
@@ -28,11 +29,13 @@ export default function ViewCards({ showPsychic, showFullRules, showPointCosts }
     delete unit.selectionId;
   }
 
+  var usedRules = []
+
   const unitGroups = _.groupBy(units, u => JSON.stringify(u));
-  console.log(unitGroups);
+  //console.log(unitGroups);
   return (
     <>
-      <div className="columns is-multiline">
+      <div className={style.grid}>
         {Object.values(unitGroups).map((grp: ISelectedUnit[], i) => {
 
           const u = grp[0];
@@ -47,18 +50,24 @@ export default function ViewCards({ showPsychic, showFullRules, showPointCosts }
             .filter(r => r.name != "-");
 
           const equipmentRules = UnitService.getAllUpgradedRules(u);
-          console.log(equipmentRules);
+          //console.log(equipmentRules);
 
           const rules = specialRules.concat(equipmentRules).filter(r => !!r && r.name != "-");
           const ruleGroups = groupBy(rules, "name");
           const ruleKeys = Object.keys(ruleGroups);
           const toughness = toughFromUnit(u);
 
+          const weaponSpecialRules = _.compact(u.equipment.flatMap(e => e.attacks && e.specialRules)).map(r => r.name)
+          const upgradeWeaponsSpecialRules = UnitService.getAllUpgradeWeapons(u).flatMap(w => {
+            if ((w as IUpgradeGainsMultiWeapon).profiles) return (w as IUpgradeGainsMultiWeapon).profiles.flatMap(w => w.specialRules)
+            return (w as IUpgradeGainsWeapon).specialRules
+          }).map(r => r.name)
+          usedRules = usedRules.concat(ruleKeys).concat(weaponSpecialRules).concat(upgradeWeaponsSpecialRules)
           // Sort rules alphabetically
           ruleKeys.sort((a, b) => a.localeCompare(b));
 
           return (
-            <div key={i} className="column is-one-third">
+            <div key={i} className={style.card}>
               <Card elevation={1}>
                 <div className="mb-4">
                   <div className="card-body">
@@ -90,9 +99,7 @@ export default function ViewCards({ showPsychic, showFullRules, showPointCosts }
                       </div>}
 
                     </div>
-                    <div className="px-2">
-                      <UnitEquipmentTable unit={u} />
-                    </div>
+                    <UnitEquipmentTable unit={u} square={true} />
                     {/* {specialRules?.length && <Paper square elevation={0}>
                                             <div className="px-4 mb-4">
                                                 <h4 style={{ fontWeight: 600 }}>Special Rules</h4>
@@ -104,24 +111,28 @@ export default function ViewCards({ showPsychic, showFullRules, showPointCosts }
                         {ruleKeys.map((key, index) => {
 
                           const group = ruleGroups[key];
-                          const rule = group[0];
-                          const rating = group.reduce((total, next) => next.rating ? total + parseInt(next.rating) : total, 0);
 
                           if (!showFullRules)
                             return (
                               <span key={index} style={{ fontWeight: 600 }}>
                                 {index === 0 ? "" : ", "}
-                                {RulesService.displayName({ ...rule, rating })}
+                                {/* <RuleList specialRules={[{ ...rule, rating, count }]} /> */}
+                                <RuleList specialRules={group} />
                               </span>
                             );
+
+                          const rule = group[0];
+                          const rating = group.reduce((total, next) => next.rating ? total + parseInt(next.rating) : total, 0);
 
                           const ruleDefinition = ruleDefinitions
                             .filter(r => /(.+?)(?:\(|$)/.exec(r.name)[0] === rule.name)[0];
 
                           return (
                             <p key={index}>
-                              <span style={{ fontWeight: 600 }}>{RulesService.displayName({ ...rule, rating })} - </span>
-                              <span>{ruleDefinition?.description || ""}</span>
+                              <span style={{ fontWeight: 600 }}>
+                                {RulesService.displayName({ ...rule, rating }, count)} -
+                              </span>
+                              <span> {ruleDefinition?.description || ""}</span>
                             </p>
                           );
                         })}
@@ -133,7 +144,7 @@ export default function ViewCards({ showPsychic, showFullRules, showPointCosts }
             </div>
           );
         })}
-        {showPsychic && <div className="column is-one-third">
+        {showPsychic && <div className={style.card} >
           <Card elevation={1}>
             <div className="mb-4">
               <div className="card-body">
@@ -155,6 +166,27 @@ export default function ViewCards({ showPsychic, showFullRules, showPointCosts }
           </Card>
         </div >}
       </div >
+      {!showFullRules && <div className={`mx-4 ${style.card}`} >
+        <Card elevation={1}>
+          <div className="mb-4">
+            <div className="card-body">
+              <h3 className="is-size-4 my-2" style={{ fontWeight: 500, textAlign: "center" }}>Special Rules</h3>
+              <hr className="my-0" />
+
+              <Paper square elevation={0}>
+                <div className={`px-2 my-2 ${style.grid} has-text-left`}>
+                  {_.uniq(usedRules).sort().map((r, i) => (
+                    <p key={i} style={{breakInside: "avoid"}}>
+                      <span style={{ fontWeight: 600 }}>{r} - </span>
+                      <span>{ruleDefinitions.find(t => t.name === r)?.description}</span>
+                    </p>
+                  ))}
+                </div>
+              </Paper>
+            </div>
+          </div>
+        </Card>
+      </div >}
     </>
   );
 }

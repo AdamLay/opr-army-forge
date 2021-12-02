@@ -1,29 +1,26 @@
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import { IEquipment, ISelectedUnit, IUpgradeGains, IUpgradeGainsItem, IUpgradeGainsMultiWeapon, IUpgradeGainsRule, IUpgradeGainsWeapon } from '../data/interfaces';
+import { ISelectedUnit, IUpgradeGains, IUpgradeGainsItem, IUpgradeGainsMultiWeapon, IUpgradeGainsRule, IUpgradeGainsWeapon } from '../data/interfaces';
 import EquipmentService from '../services/EquipmentService';
 import pluralise from "pluralize";
 import RuleList from './components/RuleList';
 import UnitService from '../services/UnitService';
 import DataParsingService from '../services/DataParsingService';
-import RulesService from '../services/RulesService';
 import { Fragment } from 'react';
 import _ from "lodash";
 
-export function WeaponRow({ unit, e, isProfile }: { unit: ISelectedUnit, e: IEquipment, isProfile: boolean }) {
+export function WeaponRow({ unit, e, isProfile }: { unit: ISelectedUnit, e: IUpgradeGainsWeapon, isProfile: boolean }) {
 
   const count = e.count;
-  const name = e.count > 1 && e.label ? pluralise.plural(e.label) : e.label;
-
+  const name = e.count > 1 ? pluralise.plural(e.name) : pluralise.singular(e.name);
   const weaponCount = count > 1 ? `${count}x ` : null;
+  const rules = e.specialRules.filter(r => r.name !== "AP");
 
   const cellStyle = { paddingLeft: "8px", paddingRight: "8px" };
   const borderStyle = {
     borderBottom: "none",
     borderTop: isProfile ? "none" : "1px solid rgb(224, 224, 224)"
   };
-  const rules = e.specialRules ? e.specialRules
-    .filter(r => r.indexOf("AP") === -1)
-    .map(DataParsingService.parseRule) : [];
+
 
   return (
     <TableRow>
@@ -40,79 +37,34 @@ export function WeaponRow({ unit, e, isProfile }: { unit: ISelectedUnit, e: IEqu
   );
 }
 
-export default function UnitEquipmentTable({ unit }: { unit: ISelectedUnit }) {
+export default function UnitEquipmentTable({ unit, square }: { unit: ISelectedUnit, square: boolean }) {
 
   const isWeapon = e => e.attacks;
 
   const equipment = unit.equipment.filter(e => !isWeapon(e));
   const itemUpgrades = UnitService.getAllUpgradeItems(unit);
-  const weapons = unit.equipment.filter(e => isWeapon(e))
-  const weaponUpgrades = UnitService.getAllUpgradeWeapons(unit);
+  const weapons = UnitService.getAllWeapons(unit);
 
   const hasEquipment = equipment.length > 0 || itemUpgrades.length > 0;
-  const hasWeapons = weapons.length > 0 || weaponUpgrades.length > 0;
+  const hasWeapons = weapons.length > 0;
 
-  const upgradeToEquipment = (upgrade: IUpgradeGains): IEquipment => {
-    if (upgrade.type === "ArmyBookWeapon") {
-      const weapon = upgrade as IUpgradeGainsWeapon;
-      const equipment: IEquipment = {
-        label: pluralise.singular(weapon.name),
-        attacks: weapon.attacks,
-        range: weapon.range,
-        specialRules: weapon.specialRules.map(r => RulesService.displayName(r)),
-        count: upgrade.count
-      };
-      return equipment;
-    } else if (upgrade.type === "ArmyBookMultiWeapon") {
-      return upgrade as IUpgradeGainsMultiWeapon;
-    }
-    return {
-      label: upgrade.name,
-    };
-  };
-  const upgradesAsEquipment = weaponUpgrades.map(upgradeToEquipment);
+  const combinedEquipment = equipment.map(e => ({
+    label: e.label || e.name,
+    specialRules: e.specialRules.map(DataParsingService.parseRule)
+  })).concat(itemUpgrades.map(u => ({
+    label: u.name,
+    specialRules: u.content.filter(c => c.type === "ArmyBookRule" || c.type === "ArmyBookDefense") as IUpgradeGainsRule[]
+  })));
 
-  // Combine upgradesAsEquipment with weapons
-  const combinedWeapons: IEquipment[] = [];
-  const addedUpgrades: string[] = [];
-
-  weapons.forEach((w, index) => {
-    const weapon = { ...w };
-    upgradesAsEquipment.forEach((e) => {
-      if (e.label === w.label && e.attacks === w.attacks) {
-        weapon.count += e.count;
-        addedUpgrades.push(e.label);
-      }
-    })
-    combinedWeapons.push(weapon);
-  });
-
-  upgradesAsEquipment.forEach((e) => {
-    if (!addedUpgrades.includes(e.label)) {
-      const index = combinedWeapons
-        .findIndex((w) => pluralise.singular(w.label) === pluralise.singular(e.label) && w.attacks === e.attacks);
-
-      if (index !== -1) {
-        combinedWeapons[index].count += e.count;
-      } else {
-        combinedWeapons.push(e);
-      }
-    }
-  });
-
-  const weaponGroups = _.groupBy(combinedWeapons, w => w.label + w.attacks);
-
-  // console.log("Weapon upgrades: ", weaponUpgrades);
-  // console.log("Upgrades as equipment: ", upgradesAsEquipment);
-  // console.log("Combined weapons: ", combinedWeapons);
-  // console.log("Weapon groups", weaponGroups);
+  const weaponGroups = _.groupBy(weapons, w => w.label + w.attacks);
+  const itemGroups = _.groupBy(combinedEquipment, w => w.label);
 
   const cellStyle = { paddingLeft: "8px", paddingRight: "8px", borderBottom: "none" };
   const headerStyle = { ...cellStyle, fontWeight: 600 };
 
   return (
     <>
-      {hasWeapons && <TableContainer component={Paper} elevation={0} style={{ border: "1px solid rgba(0,0,0,.12)" }}>
+      {hasWeapons && <TableContainer component={Paper} square={square} elevation={0} style={{ border: "1px solid rgba(0,0,0,.12)" }}>
         <Table size="small">
           <TableHead>
             <TableRow style={{ backgroundColor: "#EBEBEB", fontWeight: 600 }}>
@@ -128,8 +80,9 @@ export default function UnitEquipmentTable({ unit }: { unit: ISelectedUnit }) {
               Object.keys(weaponGroups).map(key => {
                 const group = weaponGroups[key]
                 const upgrade = group[0];
-                const e = upgrade;
-                //const e = upgradeToEquipment(upgrade);
+                const count = group.reduce((c, next) => c + next.count, 0);
+                const e = { ...upgrade, count };
+
                 // Upgrade may have been replaced
                 if (!e.count)
                   return null;
@@ -142,7 +95,7 @@ export default function UnitEquipmentTable({ unit }: { unit: ISelectedUnit }) {
                         <TableCell style={{ border: "none", borderTop: "1px solid rgb(224, 224, 224)" }} colSpan={5}>{upgrade.name}</TableCell>
                       </TableRow>
                       {upgrade.profiles.map((profile, i) => (
-                        <WeaponRow key={i} unit={unit} e={upgradeToEquipment(profile)} isProfile={true} />
+                        <WeaponRow key={i} unit={unit} e={profile} isProfile={true} />
                       ))}
                     </Fragment>
                   );
@@ -166,30 +119,16 @@ export default function UnitEquipmentTable({ unit }: { unit: ISelectedUnit }) {
           </TableHead>
           <TableBody>
             {
-              equipment.filter(e => e.count).map((e, i) => {
-                const isEquippedToAll = e.count === unit.size;
+              Object.values(itemGroups).map((group: any[], index) => {
+
+                const e = group[0];
+                const count = group.reduce((c, next) => c + (next.count || 1), 0);
 
                 return (
-                  <TableRow key={i}>
-                    <TableCell style={cellStyle}>{e.count > 1 && isEquippedToAll ? '' : `${e.count}x`} {e.count > 1 && !isEquippedToAll ? pluralise.plural(e.label) : e.label}</TableCell>
+                  <TableRow key={index}>
+                    <TableCell style={cellStyle}>{count > 1 ? `${count}x ` : ""}{e.label}</TableCell>
                     <TableCell style={cellStyle}>
-                      <RuleList specialRules={e.specialRules.map(DataParsingService.parseRule)} />
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            }
-            {
-              itemUpgrades.map((e, i) => {
-                const rules = e.content
-                  .filter(c => c.type === "ArmyBookRule" || c.type === "ArmyBookDefense") as IUpgradeGainsRule[];
-                console.log(rules);
-
-                return (
-                  <TableRow key={i}>
-                    <TableCell style={cellStyle}>{e.name}</TableCell>
-                    <TableCell style={cellStyle}>
-                      <RuleList specialRules={rules} />
+                      <RuleList specialRules={e.specialRules} />
                     </TableCell>
                   </TableRow>
                 );

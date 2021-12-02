@@ -9,14 +9,6 @@ export interface ISaveData {
   listPoints: number;
   list: ListState;
 }
-export interface IEquipment {
-  label?: string;
-  name?: string;
-  range?: number;
-  attacks?: number;
-  count?: number;
-  specialRules?: string[]
-}
 
 export interface ISpecialRule {
   key: string;
@@ -35,7 +27,8 @@ export interface IUnit {
   defense: string;
   specialRules?: ISpecialRule[];
   upgrades: string[];
-  equipment: IEquipment[]
+  equipment: IUpgradeGainsWeapon[]; //IEquipment[];
+  disabledUpgradeSections: string[];
 }
 
 export interface ISelectedUnit extends IUnit {
@@ -43,10 +36,11 @@ export interface ISelectedUnit extends IUnit {
   customName?: string;
   selectedUpgrades: IUpgradeOption[];
   combined: boolean;
-  joinToUnit: string;
+  joinToUnit?: string;
 }
 
 export interface IUpgrade {
+  id: string;
   label?: string;
   type: "replace" | "upgrade" | "upgradeRule" | "attachment";
   affects?: "any" | "all" | number;

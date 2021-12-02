@@ -6,6 +6,7 @@ import pluralise from "pluralize";
 
 // TODO: Better place for global generic things to go?
 pluralise.addSingularRule(/Fuses$/i, "Fuse"); // Spear-Fuses -> Spear-Fuse
+pluralise.addSingularRule(/Axes$/i, "Axe"); // Axes -> Axe
 
 function MyApp({ Component, pageProps }) {
   return (
@@ -22,7 +23,7 @@ function MyApp({ Component, pageProps }) {
           crossOrigin="true"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=PT+Serif:ital@0;1&family=Source+Sans+Pro:wght@400;500;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&&family=Source+Sans+Pro:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
       </Head>

@@ -4,9 +4,9 @@ import { RootState } from '../../data/store'
 const rotations = {} as any;
 
 
-export default function ArmyImage({ name }) {
-  const url = `img/gf_armies/${name}.png`
-  const army = useSelector((state: RootState) => state.army);
+export default function ArmyImage({ imageUrl = null, armyData = null, name = null,  size = "100px", ...props }) {
+  const url = imageUrl ?? `img/gf_armies/${name}.png`
+  const army = armyData ?? useSelector((state: RootState) => state.army).data;
   const [img, setImg] = useState(null)
   useEffect( () => {
     fetch(url)
@@ -19,16 +19,16 @@ export default function ArmyImage({ name }) {
           })
         } else {
           //console.log("didn't get an image, trying web.");
-          setImg(army?.data?.coverImagePath || "img/default_army.png")
+          setImg(army?.coverImagePath || "img/default_army.png")
         }
       })
      //console.log(army)
-    }, [army]
+    }, [army, name]
   )
   
   
   return (
-    <div className="is-flex p-2" style={{ position: "relative", height: "100px", boxSizing: "content-box" }}>
+    <div {...props} className={`${props.className ?? ""} is-flex p-2`} style={{...props.style, position: "relative", height: size, flexBasis: size, boxSizing: "content-box" }}>
       <div style={{
         zIndex: 0,
         position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
@@ -39,7 +39,7 @@ export default function ArmyImage({ name }) {
         transform: `rotate(${rotations[name] || (rotations[name] = 360 * Math.random())}deg)`
       }}></div>
       <div className="is-flex" style={{
-        height: "100px",
+        height: "100%",
         width: "100%",
         backgroundImage: `url(${img})`,
         backgroundPosition: "center",
