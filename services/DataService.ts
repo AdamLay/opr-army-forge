@@ -20,9 +20,12 @@ export default class DataService {
     fetch(filePath)
       .then((res) => res.json())
       .then((data) => {
-        console.log(data);
 
-        callback(data);
+        console.log(data);
+        var transformData = this.transformApiData(data);
+        console.log(transformData);
+        callback(transformData);
+
       }, fallback);
   }
 
