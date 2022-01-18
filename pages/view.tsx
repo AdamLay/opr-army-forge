@@ -5,7 +5,7 @@ import { RootState } from '../data/store'
 import { useRouter } from "next/router";
 import ViewCards from "../views/ViewCards";
 import ViewList from "../views/ViewList";
-import { AppBar, Button, IconButton, Paper, Toolbar, Typography, Drawer, List, ListItem, ListItemText, Switch } from "@mui/material";
+import { AppBar, Button, IconButton, Paper, Toolbar, Typography, Drawer, List, ListItem, ListItemText, Switch, ListItemButton, Divider } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ViewAgendaIcon from '@mui/icons-material/ViewAgenda';
@@ -22,8 +22,11 @@ export default function View() {
   const [isCardView, setCardView] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showPsychic, setShowPsychic] = useState(listContainsPyschic(list));
+  const [showOrgChart, setShowOrgChart] = useState(false);
   const [showFullRules, setShowFullRules] = useState(false);
+  const [showRulesSummary, setShowRulesSummary] = useState(true);
   const [showPointCosts, setShowPointCosts] = useState(true);
+  const [combineIdentical, setCombineIdentical] = useState(true);
 
   return (
     <>
@@ -66,21 +69,46 @@ export default function View() {
             <ClearIcon />
           </IconButton>
         </div>
-        <List>
+        <List sx={{minWidth: "18rem"}}>
+          <ListItem sx={{marginTop: "-0.5rem"}}>
+            <ListItemText sx={{textAlign: "start"}}>Display Mode</ListItemText>
+            <Button onClick={() => setCardView(!isCardView)} sx={{placeContent: "end"}}>
+              <span>{isCardView ? "Card View" : "List View"}&nbsp;</span>
+              {isCardView ? <DashboardIcon /> : <ViewAgendaIcon />}
+            </Button>
+          </ListItem>
+          <Divider />
+          {isCardView && <>
+            <ListItem>
+              <ListItemText>Combine Identical Units</ListItemText>
+              <Switch edge="end" checked={combineIdentical} onChange={() => setCombineIdentical(!combineIdentical)} disabled={!isCardView} />
+            </ListItem>
+            <Divider />
+            <ListItem>
+              <ListItemText>Show point costs</ListItemText>
+              <Switch edge="end" checked={showPointCosts} onChange={() => setShowPointCosts(!showPointCosts)} disabled={!isCardView} />
+            </ListItem>
+            <ListItem>
+              <ListItemText>Show full special rules text</ListItemText>
+              <Switch edge="end" checked={showFullRules} onChange={() => setShowFullRules(!showFullRules)} disabled={!isCardView} />
+            </ListItem>
+            <Divider />
+            <ListItem>
+              <ListItemText>Show Rules Summary</ListItemText>
+              <Switch edge="end" checked={showRulesSummary} onChange={() => setShowRulesSummary(!showRulesSummary)} disabled={!isCardView || showFullRules} />
+            </ListItem>
+            <ListItem>
+              <ListItemText>Show Organisation Chart</ListItemText>
+              <Switch edge="end" checked={showOrgChart} onChange={() => setShowOrgChart(!showOrgChart)} disabled={!isCardView} />
+            </ListItem>
+          </>}
           <ListItem>
             <ListItemText>Show Psychic Spells</ListItemText>
             <Switch edge="end" checked={showPsychic} onChange={() => setShowPsychic(!showPsychic)} />
           </ListItem>
-          <ListItem>
-            <ListItemText>Show full special rules text</ListItemText>
-            <Switch edge="end" checked={showFullRules} onChange={() => setShowFullRules(!showFullRules)} />
-          </ListItem>
-          <ListItem>
-            <ListItemText>Show point costs</ListItemText>
-            <Switch edge="end" checked={showPointCosts} onChange={() => setShowPointCosts(!showPointCosts)} />
-          </ListItem>
         </List>
       </Drawer>
+      {/*
       <div className="is-flex px-4 py-2 no-print" style={{ alignItems: "center" }}>
         <div className="is-flex-grow-1"></div>
         <Button onClick={() => setCardView(!isCardView)}>
@@ -88,10 +116,11 @@ export default function View() {
           <span className="pl-1 full-compact-text">{isCardView ? "cards" : "list"}</span>
         </Button>
       </div>
+      */}
       <div className="px-4">
         {
           isCardView
-            ? <ViewCards showPsychic={showPsychic} showFullRules={showFullRules} showPointCosts={showPointCosts} />
+            ? <ViewCards showPsychic={showPsychic} showFullRules={showFullRules} showRulesSummary={showRulesSummary} showPointCosts={showPointCosts} showOrgChart={showOrgChart} combineIdentical={combineIdentical} />
             : <ViewList showPsychic={showPsychic} showFullRules={showFullRules} showPointCosts={showPointCosts} />
         }
       </div>

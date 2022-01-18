@@ -14,7 +14,7 @@ import _ from "lodash";
 import { ISelectedUnit, IUpgradeGainsMultiWeapon, IUpgradeGainsWeapon } from "../data/interfaces";
 import RuleList from "./components/RuleList";
 
-export default function ViewCards({ showPsychic, showFullRules, showPointCosts }) {
+export default function ViewCards({ showPsychic = false, showFullRules = false, showRulesSummary = true, showPointCosts = true, showOrgChart = false, combineIdentical = true }) {
 
   const list = useSelector((state: RootState) => state.list);
   const army = useSelector((state: RootState) => state.army);
@@ -24,15 +24,42 @@ export default function ViewCards({ showPsychic, showFullRules, showPointCosts }
   const spells = army.data?.spells || [];
   const ruleDefinitions: IGameRule[] = gameRules.concat(armyRules);
 
-  const units = (list?.units ?? []).map(u => ({ ...u }));
-  for (let unit of units) {
-    delete unit.selectionId;
+  const units = (list?.units ?? []).filter(u => u.selectionId !== "dummy").map(u => (
+    {...u,
+       id: undefined, 
+       equipment: _.sortBy(u.equipment.map(e => (
+        {...e, 
+          dependencies: _.sortBy(_.uniq(e.dependencies))
+        })), [e => e.label]),
+       selectedUpgrades: _.sortBy(u.selectedUpgrades.map(up => (
+        {...up, 
+          gains: up.gains.map(g => ({...g, id: undefined}))
+        })), [up => up.id]) 
+    }));
+  if (combineIdentical) for (let unit of units) {
+    delete unit.selectionId
+    delete unit.joinToUnit
+    delete unit.combined
   }
+  console.log(units.map(u => JSON.stringify(u)))
 
   var usedRules = []
 
   const unitGroups = _.groupBy(units, u => JSON.stringify(u));
-  //console.log(unitGroups);
+  const baseUnits = list.units.filter(u => !u.joinToUnit)
+
+  const MiniUnit = ({unit, children="", sx={}, ...props}) => {
+    return (
+      <p style={{paddingLeft: "1rem", textIndent: "-1rem", ...sx}} {...props}>
+        <span style={{ fontWeight: 600 }}>
+          {children}
+          {unit.customName || unit.name}
+        </span>
+        {Object.keys(unit.selectedUpgrades).length > 0 ? <span style={{ fontWeight: 400 }}>&nbsp;({Object.entries(_.countBy(unit.selectedUpgrades, upg => upg.label.split(/\s[\(-]/)[0])).map(e => `${e[1] > 1 ? e[1] + "x " : ""}${e[0]}`).join(", ")})</span>: ""}
+      </p>
+      )
+    }
+
   return (
     <>
       <div className={style.grid}>
@@ -65,6 +92,8 @@ export default function ViewCards({ showPsychic, showFullRules, showPointCosts }
           usedRules = usedRules.concat(ruleKeys).concat(weaponSpecialRules).concat(upgradeWeaponsSpecialRules)
           // Sort rules alphabetically
           ruleKeys.sort((a, b) => a.localeCompare(b));
+
+          
 
           return (
             <div key={i} className={style.card}>
@@ -148,7 +177,7 @@ export default function ViewCards({ showPsychic, showFullRules, showPointCosts }
           <Card elevation={1}>
             <div className="mb-4">
               <div className="card-body">
-                <h3 className="is-size-4 my-2" style={{ fontWeight: 500, textAlign: "center" }}>Psychic/Spells</h3>
+                <h3 className="is-size-4 my-2" style={{ fontWeight: 500, textAlign: "center" }}>{["gf", "gff"].includes(army.gameSystem) ? "Psychic Spells" : "Wizard Spells"}</h3>
                 <hr className="my-0" />
 
                 <Paper square elevation={0}>
@@ -165,8 +194,33 @@ export default function ViewCards({ showPsychic, showFullRules, showPointCosts }
             </div>
           </Card>
         </div >}
+        {showOrgChart && <div className={style.card} >
+          <Card elevation={1}>
+            <div className="mb-4">
+              <div className="card-body">
+                <h3 className="is-size-4 my-2" style={{ fontWeight: 500, textAlign: "center" }}>Organisation Chart</h3>
+                <hr className="my-0" />
+
+                <Paper square elevation={0}>
+                  <div className="px-2 my-2">
+                    <ul>
+                    {baseUnits.map(u => {
+                      let joinedUnits = list.units.filter(t => t.joinToUnit === u.selectionId)
+                      return (
+                      <li style={{marginBottom: "0.5rem"}}><MiniUnit unit={u} />
+                        {joinedUnits.length > 0 ? <ul style={{marginLeft: "0.25rem", paddingLeft: "0.75rem", borderLeft: "1pt solid lightgrey", paddingBottom: "0.25rem", borderBottom: "1pt solid lightgrey", marginRight: "1rem"}}>{joinedUnits.map(j => {return <li><MiniUnit unit={j}></MiniUnit></li>})}</ul> : ""}
+                      </li>
+                      )
+                    })}
+                    </ul>
+                  </div>
+                </Paper>
+              </div>
+            </div>
+          </Card>
+        </div >}
       </div >
-      {!showFullRules && <div className={`mx-4 ${style.card}`} >
+      {!showFullRules && showRulesSummary && <div className={`mx-4 ${style.card}`} >
         <Card elevation={1}>
           <div className="mb-4">
             <div className="card-body">
@@ -175,12 +229,14 @@ export default function ViewCards({ showPsychic, showFullRules, showPointCosts }
 
               <Paper square elevation={0}>
                 <div className={`px-2 my-2 ${style.grid} has-text-left`}>
-                  {_.uniq(usedRules).sort().map((r, i) => (
+                  {_.uniq(usedRules).sort().map((r, i) => {
+                    let desc = ruleDefinitions.find(t => t.name === r)?.description
+                    return desc ?
                     <p key={i} style={{breakInside: "avoid"}}>
                       <span style={{ fontWeight: 600 }}>{r} - </span>
-                      <span>{ruleDefinitions.find(t => t.name === r)?.description}</span>
-                    </p>
-                  ))}
+                      <span>{desc}</span>
+                    </p> : null
+                  })}
                 </div>
               </Paper>
             </div>

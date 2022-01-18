@@ -27,7 +27,7 @@ export default function ViewList({ showPsychic, showFullRules, showPointCosts })
   return (
     <div>
       {
-        (list?.units || []).map((s: ISelectedUnit, index: number) => {
+        (list?.units || []).filter(u => u.selectionId !== "dummy").map((s: ISelectedUnit, index: number) => {
 
           const upgrades: IUpgradeGains[] = s.equipment
             .concat(s.selectedUpgrades.reduce((val, next) => val.concat(next.gains), []))
