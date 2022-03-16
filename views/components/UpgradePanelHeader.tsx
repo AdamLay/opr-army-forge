@@ -61,7 +61,7 @@ export default function UpgradePanelHeader() {
         </IconButton>}
         <p className="ml-4 is-flex-grow-1" style={{ textAlign: "right" }}>{UpgradeService.calculateUnitTotal(selectedUnit)}pts</p>
       </div>
-      {dummy && <Button variant="contained" className="mt-2" style={{width:"100%"}} onClick={() => dispatch(makeReal())}>Add to My List</Button>}
+      {dummy && <Button variant="contained" className="mt-2 mb-2" style={{width:"100%"}} onClick={() => dispatch(makeReal())}>Add to My List</Button>}
     </>
   );
 }

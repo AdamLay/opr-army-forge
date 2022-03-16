@@ -53,9 +53,7 @@ div[role="tooltip"] {
   top: 0;
   background-color: #FAFAFA;
   box-shadow: none !important;
-}
-.sticky.sticky-2 {
-  top: 52px;
+  min-height: 68px;
 }
 .scrolled .sticky {
   z-index: 10;
