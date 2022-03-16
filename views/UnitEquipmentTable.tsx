@@ -11,9 +11,9 @@ import _ from "lodash";
 export function WeaponRow({ unit, e, isProfile }: { unit: ISelectedUnit, e: IUpgradeGainsWeapon, isProfile: boolean }) {
 
   const count = e.count;
-  const name = e.count > 1 ? pluralise.plural(e.name) : pluralise.singular(e.name);
+  const name = e.count > 1 ? pluralise.plural(e.name) : e.name;
   const weaponCount = count > 1 ? `${count}x ` : null;
-  const rules = e.specialRules.filter(r => r.name !== "AP");
+  const rules = e.specialRules//.filter(r => r.name !== "AP");
 
   const cellStyle = { paddingLeft: "8px", paddingRight: "8px" };
   const borderStyle = {
@@ -29,7 +29,7 @@ export function WeaponRow({ unit, e, isProfile }: { unit: ISelectedUnit, e: IUpg
       </TableCell>
       <TableCell style={borderStyle}>{e.range ? e.range + '"' : '-'}</TableCell>
       <TableCell style={borderStyle}>{e.attacks ? "A" + e.attacks : '-'}</TableCell>
-      <TableCell style={borderStyle}>{EquipmentService.getAP(e) || '-'}</TableCell>
+      {/*<TableCell style={borderStyle}>{EquipmentService.getAP(e) || '-'}</TableCell>*/}
       <TableCell style={borderStyle}>
         {rules && rules.length > 0 ? <RuleList specialRules={rules} /> : <span>-</span>}
       </TableCell>
@@ -59,8 +59,8 @@ export default function UnitEquipmentTable({ unit, square }: { unit: ISelectedUn
   const weaponGroups = _.groupBy(weapons, w => pluralise.singular(w.name ?? w.label) + w.attacks);
   const itemGroups = _.groupBy(combinedEquipment, w => pluralise.singular(w.name ?? w.label));
 
-  const cellStyle = { paddingLeft: "8px", paddingRight: "8px", borderBottom: "none" };
-  const headerStyle = { ...cellStyle, fontWeight: 600 };
+  const headerStyle = { fontWeight: 600 };
+  const cellStyle = { ...headerStyle, paddingLeft: "8px", paddingRight: "8px", borderBottom: "none" };
 
   return (
     <>
@@ -68,11 +68,11 @@ export default function UnitEquipmentTable({ unit, square }: { unit: ISelectedUn
         <Table size="small">
           <TableHead>
             <TableRow style={{ backgroundColor: "#EBEBEB", fontWeight: 600 }}>
-              <TableCell style={headerStyle}>Weapon</TableCell>
-              <TableCell style={headerStyle}>RNG</TableCell>
-              <TableCell style={headerStyle}>ATK</TableCell>
-              <TableCell style={headerStyle}>AP</TableCell>
-              <TableCell style={headerStyle}>SPE</TableCell>
+              <TableCell style={cellStyle}>Weapon</TableCell>
+              <TableCell style={headerStyle}>R</TableCell>
+              <TableCell style={headerStyle}>A</TableCell>
+              {/*<TableCell style={headerStyle}>AP</TableCell>*/}
+              <TableCell style={headerStyle}>Special</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -113,8 +113,8 @@ export default function UnitEquipmentTable({ unit, square }: { unit: ISelectedUn
         <Table size="small">
           <TableHead>
             <TableRow style={{ backgroundColor: "#EBEBEB", fontWeight: 600 }}>
-              <TableCell style={headerStyle}>Equipment</TableCell>
-              <TableCell style={headerStyle}>SPE</TableCell>
+              <TableCell style={cellStyle}>Equipment</TableCell>
+              <TableCell style={cellStyle}>Special</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
