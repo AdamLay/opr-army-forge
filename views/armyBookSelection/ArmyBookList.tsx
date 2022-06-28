@@ -6,8 +6,12 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../data/store";
 
 interface ArmyBookListProps {
-  armyBooks: IArmyData[];
-  onSelect: (army: IArmyData) => void;
+  armyBooks: IArmyBookListItem[];//IArmyData[];
+  onSelect: (army: any) => void;
+}
+
+export interface IArmyBookListItem {
+  name: string;
 }
 
 export function ArmyBookList({ armyBooks, onSelect }: ArmyBookListProps) {

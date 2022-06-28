@@ -11,13 +11,16 @@ import PersistenceService from "../services/PersistenceService";
 
 export default function List() {
   const armyState = useSelector((state: RootState) => state.army);
+  const ftlState = useSelector((state: RootState) => state.ftl);
   const router = useRouter();
   const dispatch = useDispatch();
+
+  const loaded = armyState.loaded || ftlState.loaded;
 
   // Load army list file
   useEffect(() => {
     // Redirect to game selection screen if no army selected
-    if (!armyState.loaded) {
+    if (!loaded) {
       const listId = router.query["listId"] as string;
       if (listId) {
         PersistenceService.loadFromKey(dispatch, listId, (_) => {});
@@ -28,7 +31,7 @@ export default function List() {
         shallow: true,
       });
       return;
-    } else {
+    } else if (armyState.loaded) {
       dispatch(getGameRules(armyState.gameSystem));
     }
   }, []);
@@ -42,7 +45,7 @@ export default function List() {
         <title>OPR Army Forge</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      {armyState.loaded ? isBigScreen ? <DesktopView /> : <MobileView /> : null}
+      {loaded ? isBigScreen ? <DesktopView /> : <MobileView /> : null}
     </>
   );
 }

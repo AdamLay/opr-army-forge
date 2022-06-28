@@ -1,5 +1,5 @@
 import { useDispatch } from "react-redux";
-import { resetLoadedBooks, setGameSystem } from "../data/armySlice";
+import { setGameSystem } from "../data/armySlice";
 import { useRouter } from "next/router";
 import { Paper } from "@mui/material";
 import { useEffect } from "react";
@@ -27,7 +27,7 @@ export default function GameSystem() {
     }
   }, []);
 
-  const gameSystems = ["gf", "gff", "aof", "aofs", "aofr"];
+  const gameSystems = ["gf", "gff", "aof", "aofs", "aofr", "ftl"];
 
   return (
     <>

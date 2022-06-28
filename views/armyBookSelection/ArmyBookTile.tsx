@@ -1,12 +1,12 @@
 import { Card } from "@mui/material";
 import ArmyImage from "../components/ArmyImage";
 import _ from "lodash";
-import { IArmyData } from "../../data/armySlice";
+import { IArmyBookListItem } from "./ArmyBookList";
 
 interface ArmyBookTileProps {
-  army: IArmyData;
+  army: IArmyBookListItem;// IArmyData;
   enabled: boolean;
-  onSelect: (army: IArmyData) => void;
+  onSelect: (army: any) => void;
 }
 
 export default function ArmyBookTile({

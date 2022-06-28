@@ -11,6 +11,7 @@ import UnitListItem from "./components/UnitListItem";
 import { addUnit, previewUnit, removeUnit, selectUnit } from "../data/listSlice";
 import { useRouter } from "next/router";
 import { getTabsListUnstyledUtilityClass } from "@mui/base";
+import { IArmyData } from "../data/armySlice";
 
 export function UnitSelection() {
   const loadedArmyBooks = useSelector((state: RootState) => state.army.loadedArmyBooks);
@@ -24,7 +25,12 @@ export function UnitSelection() {
   );
 }
 
-function UnitSelectionForArmy({ army, showTitle }) {
+interface UnitSelectionForArmyProps {
+  army: IArmyData;
+  showTitle: boolean;
+}
+
+function UnitSelectionForArmy({ army, showTitle }: UnitSelectionForArmyProps) {
   const dispatch = useDispatch();
   const router = useRouter();
 

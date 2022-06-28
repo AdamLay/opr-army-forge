@@ -7,6 +7,7 @@ import PersistenceService from '../services/PersistenceService';
 import { nanoid } from "nanoid";
 import UnitService from '../services/UnitService';
 import { makeCopy } from '../services/Helpers';
+import { IShipClass } from './ftlSlice';
 
 export interface ListState {
   creationTime: string;
@@ -22,7 +23,7 @@ export interface ListState {
 
 const initialState: ListState = {
   creationTime: null,
-  name: "New Army",
+  name: null,
   pointsLimit: 0,
   units: [],
   selectedUnitId: null,

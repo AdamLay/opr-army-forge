@@ -11,6 +11,7 @@ import { MenuBar } from "../views/components/MenuBar";
 import { CreateView } from "../views/listConfiguration/CreateView";
 import EditView from "../views/listConfiguration/EditView";
 import MultipleArmySelections from "../views/listConfiguration/MultipleArmySelections";
+import FtlFaction from "../views/listConfiguration/FtlSelection";
 
 export default function ListConfiguration() {
   const dispatch = useDispatch<typeof store.dispatch>();
@@ -20,6 +21,7 @@ export default function ListConfiguration() {
 
   const armyState = useSelector((state: RootState) => state.army);
   const listState = useSelector((state: RootState) => state.list);
+  const ftlState = useSelector((state: RootState) => state.ftl);
 
   const [armyName, setArmyName] = useState(isEdit ? listState.name : "");
   const [pointsLimit, setPointsLimit] = useState(isEdit ? listState.pointsLimit : null);
@@ -49,8 +51,8 @@ export default function ListConfiguration() {
 
   useEffect(() => {
     // TODO: Be nice to the user and work out if the name was set manually before overriding it? nah
-    setArmyName(listState?.name || armyData?.name || "");
-  }, [armyData]);
+    setArmyName(listState?.name || armyData?.name || ftlState?.selectedFaction?.faction || "");
+  }, [armyData, ftlState]);
 
   return (
     <>
@@ -80,7 +82,11 @@ export default function ListConfiguration() {
           value={pointsLimit ?? ""}
           onChange={(e) => setPointsLimit(e.target.value ? parseInt(e.target.value) : null)}
         />
-        <MultipleArmySelections />
+        {ftlState.selectedFaction ? (
+          <FtlFaction name={ftlState.selectedFaction.faction} />
+        ) : (
+          <MultipleArmySelections />
+        )}
         {isEdit ? (
           <EditView armyName={armyName} pointsLimit={pointsLimit} />
         ) : (
